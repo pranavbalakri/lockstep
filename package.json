@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint .",
     "db:seed": "npx tsx prisma/seed.ts",
-    "db:reset": "npx prisma migrate reset --force && npx tsx prisma/seed.ts"
+    "db:reset": "npx prisma migrate reset --force && npx tsx prisma/seed.ts",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
