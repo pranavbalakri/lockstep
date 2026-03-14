@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { getSessionFromRequest } from "@/lib/auth"
+import { deployEscrow } from "@/lib/escrow"
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -58,7 +59,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   const request = await prisma.request.findUnique({
     where: { id },
-    include: { gig: true },
+    include: {
+      gig: true,
+      client: { select: { walletAddress: true } },
+    },
   })
   if (!request) return NextResponse.json({ error: "Not found" }, { status: 404 })
   if (request.gig.freelancerId !== session.id) {
@@ -66,7 +70,32 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 
   if (action === "accept") {
-    await prisma.request.update({ where: { id }, data: { status: "accepted" } })
+    // Deploy escrow contract if gig requires ETH deposit and both parties have wallet addresses
+    let contractAddress: string | undefined
+    const freelancer = await prisma.user.findUnique({
+      where: { id: session.id },
+      select: { walletAddress: true },
+    })
+    const gigEthAmount = request.gig.ethAmount
+    const clientWallet = request.client.walletAddress
+    const freelancerWallet = freelancer?.walletAddress
+
+    if (gigEthAmount && gigEthAmount > 0 && clientWallet && freelancerWallet) {
+      try {
+        contractAddress = await deployEscrow(
+          clientWallet as `0x${string}`,
+          freelancerWallet as `0x${string}`
+        )
+      } catch (err) {
+        console.error("Escrow deploy failed:", err)
+        // Continue without contract — ETH deposit becomes optional
+      }
+    }
+
+    await prisma.request.update({
+      where: { id },
+      data: { status: "accepted", ...(contractAddress && { contractAddress }) },
+    })
     await prisma.request.updateMany({
       where: { gigId: request.gigId, id: { not: id } },
       data: { status: "rejected" },
@@ -75,7 +104,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       where: { id: request.gigId },
       data: {
         status: "in_progress",
-        ...(request.contractAddress && { contractAddress: request.contractAddress }),
+        ...(contractAddress && { contractAddress }),
       },
     })
   } else {

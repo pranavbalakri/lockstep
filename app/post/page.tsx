@@ -17,6 +17,7 @@ export default function PostPage() {
   const [budget, setBudget] = useState("")
   const [deadline, setDeadline] = useState("")
   const [deliverables, setDeliverables] = useState("")
+  const [ethAmount, setEthAmount] = useState("")
   const [skills, setSkills] = useState<string[]>([])
   const [skillInput, setSkillInput] = useState("")
   const [error, setError] = useState("")
@@ -54,7 +55,7 @@ export default function PostPage() {
       const res = await fetch("/api/gigs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, category, description, budget, deadline, skills, deliverables }),
+        body: JSON.stringify({ title, category, description, budget, deadline, skills, deliverables, ethAmount: ethAmount || undefined }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -171,6 +172,23 @@ export default function PostPage() {
                   className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
                 />
               </div>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium text-foreground">Required ETH deposit <span className="font-normal text-muted-foreground">(optional)</span></label>
+              <div className="flex h-10 items-center rounded-lg border bg-background px-3 gap-1 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-colors">
+                <span className="text-sm text-muted-foreground">Ξ</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  value={ethAmount}
+                  onChange={(e) => setEthAmount(e.target.value)}
+                  placeholder="0.05"
+                  className="flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">If set, the client must deposit this amount into an escrow contract when you accept their hire request. The AI reviews delivery and releases funds.</p>
             </div>
 
             <div className="flex flex-col gap-1.5">

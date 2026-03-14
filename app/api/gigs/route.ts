@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { title, category, description, budget, deadline, skills, deliverables } = await req.json()
+    const { title, category, description, budget, deadline, skills, deliverables, ethAmount } = await req.json()
 
     if (!title || !category || !description || !budget || !deadline || !deliverables) {
       return NextResponse.json({ error: "All fields required" }, { status: 400 })
@@ -83,6 +83,7 @@ export async function POST(req: NextRequest) {
         deadline: new Date(deadline),
         skills: JSON.stringify(skills ?? []),
         deliverables,
+        ...(ethAmount ? { ethAmount: parseFloat(ethAmount) } : {}),
       },
     })
 
