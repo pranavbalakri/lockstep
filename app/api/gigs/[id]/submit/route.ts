@@ -16,13 +16,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "Gig is not in progress" }, { status: 400 })
   }
 
-  const existing = await prisma.submission.findUnique({ where: { gigId: id } })
-  if (existing) return NextResponse.json({ error: "Already submitted" }, { status: 409 })
-
   const { textContent, url, notes } = await req.json()
 
-  const submission = await prisma.submission.create({
-    data: {
+  const submission = await prisma.submission.upsert({
+    where: { gigId: id },
+    update: {
+      textContent: textContent ?? null,
+      url: url ?? null,
+      notes: notes ?? null,
+    },
+    create: {
       gigId: id,
       freelancerId: session.id,
       textContent: textContent ?? null,
@@ -32,7 +35,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     },
   })
 
-  await prisma.gig.update({ where: { id }, data: { status: "submitted" } })
+  await prisma.gig.update({
+    where: { id },
+    data: {
+      status: "submitted",
+      mediatorVerdict: null,
+      mediatorReasoning: null,
+      clientArgument: null,
+      freelancerArgument: null,
+    },
+  })
 
   return NextResponse.json({ submission }, { status: 201 })
 }

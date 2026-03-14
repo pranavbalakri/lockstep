@@ -89,7 +89,7 @@ export default function SubmitPage({ params }: { params: Promise<{ id: string }>
           <div className="max-w-md text-center">
             <div className="mb-4 text-4xl">✓</div>
             <h1 className="font-serif text-2xl font-normal text-foreground">Deliverable submitted</h1>
-            <p className="mt-3 text-sm text-muted-foreground">Awaiting review from the client.</p>
+            <p className="mt-3 text-sm text-muted-foreground">Awaiting AI review before payment can be released.</p>
             <div className="mt-6 flex items-center justify-center gap-3">
               <Button asChild className="rounded-full px-6">
                 <Link href="/dashboard">Dashboard</Link>

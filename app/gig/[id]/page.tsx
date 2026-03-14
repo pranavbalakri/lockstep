@@ -33,6 +33,8 @@ interface GigData {
   status: string
   ethAmount?: number
   contractAddress?: string
+  mediatorVerdict?: string | null
+  mediatorReasoning?: string | null
   createdAt: string
   requestCount: number
   freelancer: { id: string; name: string }
@@ -177,17 +179,20 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
   async function handleReview(action: "accept" | "dispute") {
     setReviewLoading(true)
     setReviewError("")
-    setReviewStep(action === "dispute" ? "Running AI review…" : "Processing…")
+    setReviewStep(action === "dispute" ? "Starting mediation…" : "Running AI review…")
     try {
-      // Server runs AI evaluation and resolves the escrow contract
       const res = await fetch(`/api/gigs/${id}/review`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action }),
       })
+      const data = await res.json()
       if (!res.ok) {
-        const data = await res.json()
         throw new Error(data.error ?? "Review failed")
+      }
+
+      if (data.review?.action === "NOTIFY_FREELANCER") {
+        setReviewError(data.review.remediation ?? data.review.summary ?? "AI requested revisions before payment can be released.")
       }
 
       const gigRes = await fetch(`/api/gigs/${id}`)
@@ -392,6 +397,17 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
               </div>
             )}
 
+            {gig.mediatorVerdict === "needs_revision" && gig.mediatorReasoning && (
+              <div className="mb-8 rounded-xl border border-amber-200 bg-amber-50 p-5">
+                <p className="font-medium text-amber-900">
+                  {isFreelancer
+                    ? "AI review requested revisions before payment can be released."
+                    : "AI review sent this delivery back for revisions."}
+                </p>
+                <p className="mt-2 text-sm text-amber-800 whitespace-pre-wrap">{gig.mediatorReasoning}</p>
+              </div>
+            )}
+
             {/* Submission / Review section (client side) */}
             {isClient && gig.status === "submitted" && gig.submission && (
               <section className="mb-8 rounded-xl border bg-card p-5">
@@ -418,7 +434,7 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
                 )}
                 {gig.contractAddress && (
                   <p className="mb-4 text-xs text-muted-foreground">
-                    The server will call <code>release()</code> or <code>dispute()</code> on the escrow contract based on the AI verdict.
+                    Lockstep will evaluate the submission with AI before releasing or disputing the escrow contract.
                   </p>
                 )}
                 {reviewError && (
@@ -426,7 +442,7 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
                 )}
                 <div className="flex items-center gap-3">
                   <Button className="rounded-full px-6" disabled={reviewLoading} onClick={() => handleReview("accept")}>
-                    {reviewLoading ? (reviewStep || "Processing…") : "Accept & Release Payment"}
+                    {reviewLoading ? (reviewStep || "Running AI review…") : "Run AI Review"}
                   </Button>
                   <Button variant="outline" className="rounded-full px-6 text-destructive hover:text-destructive" disabled={reviewLoading} onClick={() => handleReview("dispute")}>
                     Dispute

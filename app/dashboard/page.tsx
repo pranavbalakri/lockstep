@@ -16,7 +16,8 @@ interface Request {
   proposedTimeline: string
   status: string
   createdAt: string
-  gig: { id: string; title: string; budget: number; deadline: string; status?: string; freelancer?: { id: string; name: string } }
+  ethAmount?: number | null
+  gig: { id: string; title: string; budget: number; deadline: string; status?: string; ethAmount?: number | null; contractAddress?: string | null; freelancer?: { id: string; name: string } }
   client?: { id: string; name: string }
 }
 
@@ -111,6 +112,116 @@ export default function DashboardPage() {
   )
 }
 
+const STEPS = ["Request sent", "Accepted", "Under review", "Complete"]
+
+function getActiveStep(req: Request): number {
+  if (req.status === "pending") return 0
+  if (req.status === "rejected") return -1
+  const s = req.gig.status
+  if (s === "in_progress") return 1
+  if (s === "submitted") return 2
+  if (s === "completed" || s === "disputed") return 3
+  return 1
+}
+
+function RequestTracker({ req }: { req: Request }) {
+  const active = getActiveStep(req)
+  const isRejected = active === -1
+  const isDisputed = req.gig.status === "disputed"
+  const needsDeposit = active === 1 && !!req.gig.ethAmount && !req.ethAmount
+
+  const steps = isDisputed
+    ? ["Request sent", "Accepted", "Under review", "Disputed"]
+    : STEPS
+
+  return (
+    <div className={`rounded-xl border bg-card p-5 ${isRejected ? "opacity-50" : ""}`}>
+      {/* Header */}
+      <div className="mb-4 flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <Link href={`/gig/${req.gig.id}`} className="font-medium text-foreground hover:text-primary transition-colors">
+            {req.gig.title}
+          </Link>
+          {req.gig.freelancer && (
+            <span className="ml-2 text-xs text-muted-foreground">by {req.gig.freelancer.name}</span>
+          )}
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            ${req.gig.budget.toLocaleString()} · {req.proposedTimeline}
+            {req.gig.deadline ? ` · due ${format(new Date(req.gig.deadline), "MMM d")}` : ""}
+          </p>
+        </div>
+        <Button asChild size="sm" variant="ghost" className="shrink-0 rounded-full">
+          <Link href={`/gig/${req.gig.id}`}>View</Link>
+        </Button>
+      </div>
+
+      {isRejected ? (
+        <p className="text-sm text-destructive">Request was declined.</p>
+      ) : (
+        <>
+          {/* Step tracker */}
+          <div className="flex items-start">
+            {steps.map((label, i) => {
+              const done = i < active
+              const current = i === active
+              const last = i === steps.length - 1
+              const disputed = isDisputed && i === steps.length - 1
+              return (
+                <div key={label} className="flex flex-1 flex-col items-center gap-1.5 last:flex-none">
+                  <div className="flex w-full items-center">
+                    {/* Dot */}
+                    <div className={`relative z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                      disputed ? "border-destructive bg-destructive/10" :
+                      done ? "border-primary bg-primary" :
+                      current ? "border-primary bg-background" :
+                      "border-border bg-background"
+                    }`}>
+                      {done && !disputed && (
+                        <svg className="h-3 w-3 text-primary-foreground" fill="none" viewBox="0 0 12 12">
+                          <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      )}
+                      {current && !disputed && (
+                        <div className="h-2 w-2 rounded-full bg-primary" />
+                      )}
+                      {disputed && i === steps.length - 1 && (
+                        <div className="h-2 w-2 rounded-full bg-destructive" />
+                      )}
+                    </div>
+                    {/* Connector */}
+                    {!last && (
+                      <div className={`h-0.5 w-full transition-colors ${done ? "bg-primary" : "bg-border"}`} />
+                    )}
+                  </div>
+                  {/* Label */}
+                  <span className={`text-center text-[11px] leading-tight ${
+                    disputed && i === steps.length - 1 ? "text-destructive font-medium" :
+                    current ? "font-medium text-foreground" :
+                    done ? "text-muted-foreground" :
+                    "text-muted-foreground/50"
+                  }`}>
+                    {label}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Deposit callout */}
+          {needsDeposit && (
+            <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+              <p className="text-sm text-amber-800">
+                Deposit <span className="font-semibold">Ξ {req.gig.ethAmount} ETH</span> to fund the escrow and start the work.{" "}
+                <Link href={`/gig/${req.gig.id}`} className="underline hover:text-amber-900">Go to gig →</Link>
+              </p>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
 function ClientDashboard({ requests }: { requests: Request[] }) {
   return (
     <div className="flex flex-col gap-12">
@@ -131,33 +242,7 @@ function ClientDashboard({ requests }: { requests: Request[] }) {
         ) : (
           <div className="flex flex-col gap-3">
             {requests.map((req) => (
-              <div key={req.id} className="rounded-xl border bg-card p-5">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0 flex-1">
-                    <div className="mb-1 flex flex-wrap items-center gap-2">
-                      <Link href={`/gig/${req.gig.id}`} className="font-medium text-foreground hover:text-primary transition-colors">
-                        {req.gig.title}
-                      </Link>
-                      {req.gig.freelancer && (
-                        <>
-                          <span className="text-xs text-muted-foreground">·</span>
-                          <span className="text-xs text-muted-foreground">by {req.gig.freelancer.name}</span>
-                        </>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground line-clamp-2">{req.proposal}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">Timeline: {req.proposedTimeline} · Budget: ${req.gig.budget.toLocaleString()}</p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_STYLES[req.status] ?? "bg-secondary text-foreground"}`}>
-                      {req.status}
-                    </span>
-                    <Button asChild size="sm" variant="ghost" className="rounded-full">
-                      <Link href={`/gig/${req.gig.id}`}>View</Link>
-                    </Button>
-                  </div>
-                </div>
-              </div>
+              <RequestTracker key={req.id} req={req} />
             ))}
           </div>
         )}
@@ -167,7 +252,6 @@ function ClientDashboard({ requests }: { requests: Request[] }) {
 }
 
 function FreelancerDashboard({ gigs, requests, onRequestAction }: { gigs: Gig[]; requests: Request[]; onRequestAction: (id: string, action: "accept" | "reject") => void }) {
-  const pendingRequests = requests.filter((r) => r.status === "pending")
   const acceptedRequests = requests.filter((r) => r.status === "accepted")
 
   return (
