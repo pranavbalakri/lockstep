@@ -15,14 +15,14 @@ model User {
   role      String   @default("freelancer")
   createdAt DateTime @default(now())
 
-  gigs        Gig[]        @relation("ClientGigs")
-  requests    Request[]    @relation("FreelancerRequests")
+  gigs        Gig[]        @relation("FreelancerGigs")
+  requests    Request[]    @relation("ClientRequests")
   submissions Submission[] @relation("FreelancerSubmissions")
 }
 
 model Gig {
   id           String   @id @default(cuid())
-  clientId     String
+  freelancerId String
   title        String
   category     String
   description  String
@@ -34,7 +34,7 @@ model Gig {
   contractAddress String?
   createdAt       DateTime @default(now())
 
-  client     User         @relation("ClientGigs", fields: [clientId], references: [id])
+  freelancer User         @relation("FreelancerGigs", fields: [freelancerId], references: [id])
   requests   Request[]
   submission Submission?
 }
@@ -42,14 +42,14 @@ model Gig {
 model Request {
   id               String   @id @default(cuid())
   gigId            String
-  freelancerId     String
+  clientId         String
   proposal         String
   proposedTimeline String
   status           String   @default("pending")
   createdAt        DateTime @default(now())
 
-  gig        Gig  @relation(fields: [gigId], references: [id])
-  freelancer User @relation("FreelancerRequests", fields: [freelancerId], references: [id])
+  gig    Gig  @relation(fields: [gigId], references: [id])
+  client User @relation("ClientRequests", fields: [clientId], references: [id])
 }
 
 model Submission {

@@ -8,13 +8,23 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const requests = await prisma.request.findMany({
+  const gigs = await prisma.gig.findMany({
     where: { freelancerId: session.id },
+    include: { requests: { select: { id: true } } },
+    orderBy: { createdAt: "desc" },
+  })
+
+  const requests = await prisma.request.findMany({
+    where: { gig: { freelancerId: session.id } },
     include: {
-      gig: { select: { id: true, title: true, budget: true, deadline: true, clientId: true, client: { select: { id: true, name: true } } } },
+      client: { select: { id: true, name: true } },
+      gig: { select: { id: true, title: true, budget: true, deadline: true } },
     },
     orderBy: { createdAt: "desc" },
   })
 
-  return NextResponse.json({ requests })
+  return NextResponse.json({
+    gigs: gigs.map((g) => ({ ...g, requestCount: g.requests.length, requests: undefined })),
+    requests,
+  })
 }
