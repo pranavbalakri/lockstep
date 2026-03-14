@@ -79,7 +79,7 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
   const [hasRequested, setHasRequested] = useState(false)
   const [depositDone, setDepositDone] = useState(false)
   const [reviewLoading, setReviewLoading] = useState(false)
-  const [reviewStep, setReviewStep] = useState("")
+  const [reviewStep, setReviewStep] = useState(0)
   const [reviewError, setReviewError] = useState("")
   const [fundLoading, setFundLoading] = useState(false)
   const [fundError, setFundError] = useState("")
@@ -179,7 +179,9 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
   async function handleReview(action: "accept" | "dispute") {
     setReviewLoading(true)
     setReviewError("")
-    setReviewStep(action === "dispute" ? "Starting mediation…" : "Running AI review…")
+    setReviewStep(1)
+    const t1 = setTimeout(() => setReviewStep(2), 7000)
+    const t2 = setTimeout(() => setReviewStep(3), 16000)
     try {
       const res = await fetch(`/api/gigs/${id}/review`, {
         method: "POST",
@@ -187,22 +189,22 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
         body: JSON.stringify({ action }),
       })
       const data = await res.json()
+      clearTimeout(t1); clearTimeout(t2)
       if (!res.ok) {
         throw new Error(data.error ?? "Review failed")
       }
-
       if (data.review?.action === "NOTIFY_FREELANCER") {
         setReviewError(data.review.remediation ?? data.review.summary ?? "AI requested revisions before payment can be released.")
       }
-
       const gigRes = await fetch(`/api/gigs/${id}`)
       if (gigRes.ok) setGig((await gigRes.json()).gig)
     } catch (e: unknown) {
+      clearTimeout(t1); clearTimeout(t2)
       const err = e as { shortMessage?: string; message?: string }
       setReviewError(err.shortMessage ?? err.message ?? "Review failed")
     }
     setReviewLoading(false)
-    setReviewStep("")
+    setReviewStep(0)
   }
 
   if (loading) {
@@ -397,6 +399,16 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
               </div>
             )}
 
+            {/* ETH Escrow flow diagram */}
+            {gig.ethAmount && gig.ethAmount > 0 && gig.contractAddress && (
+              <EscrowFlow
+                status={gig.status}
+                contractAddress={gig.contractAddress}
+                ethAmount={gig.ethAmount}
+                funded={!!(myRequest?.ethAmount || depositDone)}
+              />
+            )}
+
             {gig.mediatorVerdict === "needs_revision" && gig.mediatorReasoning && (
               <div className="mb-8 rounded-xl border border-amber-200 bg-amber-50 p-5">
                 <p className="font-medium text-amber-900">
@@ -440,14 +452,18 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
                 {reviewError && (
                   <p className="mb-4 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{reviewError}</p>
                 )}
-                <div className="flex items-center gap-3">
-                  <Button className="rounded-full px-6" disabled={reviewLoading} onClick={() => handleReview("accept")}>
-                    {reviewLoading ? (reviewStep || "Running AI review…") : "Run AI Review"}
-                  </Button>
-                  <Button variant="outline" className="rounded-full px-6 text-destructive hover:text-destructive" disabled={reviewLoading} onClick={() => handleReview("dispute")}>
-                    Dispute
-                  </Button>
-                </div>
+                {reviewLoading ? (
+                  <AIReviewSteps step={reviewStep} />
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <Button className="rounded-full px-6" onClick={() => handleReview("accept")}>
+                      Run AI Review
+                    </Button>
+                    <Button variant="outline" className="rounded-full px-6 text-destructive hover:text-destructive" onClick={() => handleReview("dispute")}>
+                      Dispute
+                    </Button>
+                  </div>
+                )}
               </section>
             )}
 
@@ -535,5 +551,120 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
         </div>
       </div>
     </main>
+  )
+}
+
+const REVIEW_STEPS = [
+  { label: "Parsing gig scope", sub: "Extracting criteria from your deliverables" },
+  { label: "Analyzing submission", sub: "Evaluating work against criteria" },
+  { label: "Generating verdict", sub: "Deciding release or dispute" },
+]
+
+function AIReviewSteps({ step }: { step: number }) {
+  return (
+    <div className="rounded-xl border bg-secondary/30 p-4">
+      <p className="mb-3 text-sm font-medium text-foreground">AI is reviewing the submission…</p>
+      <div className="flex flex-col gap-3">
+        {REVIEW_STEPS.map((s, i) => {
+          const idx = i + 1
+          const done = step > idx
+          const active = step === idx
+          return (
+            <div key={s.label} className="flex items-start gap-3">
+              <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                done ? "border-primary bg-primary" :
+                active ? "border-primary bg-background" :
+                "border-border bg-background"
+              }`}>
+                {done ? (
+                  <svg className="h-2.5 w-2.5 text-primary-foreground" fill="none" viewBox="0 0 10 10">
+                    <path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                ) : active ? (
+                  <div className="h-2 w-2 animate-pulse rounded-full bg-primary" />
+                ) : null}
+              </div>
+              <div className={`transition-opacity ${active || done ? "opacity-100" : "opacity-40"}`}>
+                <p className={`text-sm ${active ? "font-medium text-foreground" : done ? "text-muted-foreground" : "text-muted-foreground"}`}>
+                  {s.label}
+                </p>
+                {active && <p className="text-xs text-muted-foreground">{s.sub}</p>}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function EscrowFlow({ status, contractAddress, ethAmount, funded }: {
+  status: string
+  contractAddress: string
+  ethAmount: number
+  funded: boolean
+}) {
+  const completed = status === "completed"
+  const refunded = status === "disputed" && !funded
+  const short = `${contractAddress.slice(0, 6)}…${contractAddress.slice(-4)}`
+
+  const clientActive = !funded
+  const escrowActive = funded && !completed && !refunded
+  const freelancerActive = completed
+  const clientRefunded = refunded
+
+  return (
+    <div className="mb-8 rounded-xl border bg-card p-5">
+      <p className="mb-4 text-sm font-medium text-foreground">ETH Escrow Flow</p>
+      <div className="flex items-center gap-0">
+        {/* Client node */}
+        <div className="flex flex-col items-center gap-1.5">
+          <div className={`flex h-10 w-10 items-center justify-center rounded-full border-2 text-xs font-semibold transition-colors ${
+            clientActive ? "border-primary bg-primary/10 text-primary" :
+            clientRefunded ? "border-green-500 bg-green-50 text-green-700" :
+            "border-border bg-secondary text-muted-foreground"
+          }`}>
+            {clientRefunded ? "↩" : "C"}
+          </div>
+          <span className="text-[10px] text-muted-foreground">{clientRefunded ? "Refunded" : "Client"}</span>
+        </div>
+
+        {/* Arrow client → escrow */}
+        <div className={`h-0.5 flex-1 transition-colors ${funded ? "bg-primary" : "bg-border"}`} />
+
+        {/* Escrow node */}
+        <div className="flex flex-col items-center gap-1.5">
+          <div className={`flex h-12 w-12 flex-col items-center justify-center rounded-full border-2 transition-colors ${
+            escrowActive ? "border-amber-400 bg-amber-50" :
+            completed ? "border-border bg-secondary" :
+            funded ? "border-amber-400 bg-amber-50" :
+            "border-border bg-secondary"
+          }`}>
+            <span className="text-[10px] font-semibold text-amber-700">{escrowActive || funded ? "🔒" : "⬡"}</span>
+          </div>
+          <span className="text-[10px] text-muted-foreground">Escrow</span>
+          <span className="font-mono text-[9px] text-muted-foreground">{short}</span>
+          {(funded || completed) && (
+            <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-medium text-amber-800">
+              Ξ {ethAmount}
+            </span>
+          )}
+        </div>
+
+        {/* Arrow escrow → freelancer */}
+        <div className={`h-0.5 flex-1 transition-colors ${completed ? "bg-primary" : "bg-border"}`} />
+
+        {/* Freelancer node */}
+        <div className="flex flex-col items-center gap-1.5">
+          <div className={`flex h-10 w-10 items-center justify-center rounded-full border-2 text-xs font-semibold transition-colors ${
+            freelancerActive ? "border-green-500 bg-green-50 text-green-700" :
+            "border-border bg-secondary text-muted-foreground"
+          }`}>
+            {freelancerActive ? "✓" : "F"}
+          </div>
+          <span className="text-[10px] text-muted-foreground">{freelancerActive ? "Paid" : "Freelancer"}</span>
+        </div>
+      </div>
+    </div>
   )
 }
