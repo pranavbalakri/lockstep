@@ -28,7 +28,7 @@ export default function PostPage() {
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (!d?.user) { router.push("/login?redirect=/post"); return }
-        if (d.user.role !== "client") { router.push("/dashboard"); return }
+        if (d.user.role !== "freelancer") { router.push("/dashboard"); return }
         setUser(d.user)
       })
   }, [router])
@@ -82,19 +82,19 @@ export default function PostPage() {
       <Header />
       <div className="mx-auto max-w-2xl px-6 py-12">
         <div className="mb-8">
-          <h1 className="font-serif text-3xl font-normal text-foreground">Post a job</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Describe your project and start receiving proposals.</p>
+          <h1 className="font-serif text-3xl font-normal text-foreground">Post a gig</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Describe your service offering and start receiving hire requests.</p>
         </div>
 
         <div className="rounded-xl border bg-card p-6 shadow-sm">
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-foreground">Job title</label>
+              <label className="text-sm font-medium text-foreground">Gig title</label>
               <input
                 required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. Build a React dashboard"
+                placeholder="e.g. I'll build a React dashboard for your SaaS"
                 className="h-10 rounded-lg border bg-background px-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary"
               />
             </div>
@@ -191,7 +191,7 @@ export default function PostPage() {
 
             <div className="flex items-center gap-3 pt-2">
               <Button type="submit" size="lg" className="rounded-full px-8" disabled={loading}>
-                {loading ? "Posting…" : "Post Job"}
+                {loading ? "Posting…" : "Post Gig"}
               </Button>
               <Button asChild variant="ghost" size="lg" className="rounded-full">
                 <Link href="/">Cancel</Link>

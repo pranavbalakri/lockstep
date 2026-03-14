@@ -17,7 +17,9 @@
       "Bash(python -c \"import ast, sys; files = [''models.py'',''config.py'',''pipeline.py'',''routes.py'',''main.py'',''agents/__init__.py'',''agents/scope_parser.py'',''agents/deliverable_analyzer.py'',''agents/verdict_agent.py'',''agents/mediator.py'',''test_agents.py'']; [ast.parse\\(open\\(f\\).read\\(\\)\\) or print\\(f''OK: {f}''\\) for f in files]; print\\(''All files parse cleanly.''\\)\")",
       "Bash(git push:*)",
       "Bash(PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION=\"yes\" npx prisma migrate reset --force)",
-      "Bash(grep -n \"client\\\\|freelancer\\\\|isClient\\\\|isFreelancer\" /Users/pranavbalakri/lockstep/app/gig/[id]/page.tsx)"
+      "Bash(grep -n \"client\\\\|freelancer\\\\|isClient\\\\|isFreelancer\" /Users/pranavbalakri/lockstep/app/gig/[id]/page.tsx)",
+      "Bash(git checkout:*)",
+      "Bash(git pull:*)"
     ],
     "additionalDirectories": [
       "/Users/pranavbalakri/lockstep/app/api/gigs/[id]",
