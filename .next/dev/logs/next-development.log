@@ -1,22 +1,6 @@
-[00:00:00.762] Server  LOG     ✓ Ready in 548ms
-[00:00:02.527] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:02.782] Browser LOG     %c[Vercel Web Analytics]%c Debug mode is enabled by default in development. No requests will be sent to the server. color: rgb(120, 120, 120) color: inherit
-[00:00:02.782] Browser LOG     %c[Vercel Web Analytics]%c Running queued event color: rgb(120, 120, 120) color: inherit pageview {"path":"/","route":"/"}
-[00:00:02.782] Browser LOG     %c[Vercel Web Analytics]%c [view] http://localhost:3000/ color: rgb(120, 120, 120) color: inherit {"dp":"/","o":"http://localhost:3000/","r":"","sdkn":"@vercel/analytics/next","sdkv":"1.6.1","sv":"0.1.3","ts":1773497750377} /_vercel/insights/view
-[00:00:40.770] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:40.886] Browser LOG     %c[Vercel Web Analytics]%c Debug mode is enabled by default in development. No requests will be sent to the server. color: rgb(120, 120, 120) color: inherit
-[00:00:40.886] Browser LOG     %c[Vercel Web Analytics]%c Running queued event color: rgb(120, 120, 120) color: inherit pageview {"path":"/","route":"/"}
-[00:00:40.886] Browser LOG     %c[Vercel Web Analytics]%c [view] http://localhost:3000/ color: rgb(120, 120, 120) color: inherit {"dp":"/","o":"http://localhost:3000/","r":"","sdkn":"@vercel/analytics/next","sdkv":"1.6.1","sv":"0.1.3","ts":1773497788632} /_vercel/insights/view
-[00:00:41.537] Browser LOG     %c[Vercel Web Analytics]%c [view] http://localhost:3000/gigs color: rgb(120, 120, 120) color: inherit {"dp":"/gigs","o":"http://localhost:3000/gigs","sdkn":"@vercel/analytics/next","sdkv":"1.6.1","sv":"0.1.3","ts":1773497789283} /_vercel/insights/view
-[00:00:45.472] Browser LOG     %c[Vercel Web Analytics]%c [view] http://localhost:3000/ color: rgb(120, 120, 120) color: inherit {"dp":"/","o":"http://localhost:3000/","sdkn":"@vercel/analytics/next","sdkv":"1.6.1","sv":"0.1.3","ts":1773497793216} /_vercel/insights/view
-[00:00:54.617] Browser LOG     %c[Vercel Web Analytics]%c [view] http://localhost:3000/research color: rgb(120, 120, 120) color: inherit {"dp":"/research","o":"http://localhost:3000/research","sdkn":"@vercel/analytics/next","sdkv":"1.6.1","sv":"0.1.3","ts":1773497802362} /_vercel/insights/view
-[00:00:56.459] Browser LOG     %c[Vercel Web Analytics]%c [view] http://localhost:3000/enterprise color: rgb(120, 120, 120) color: inherit {"dp":"/enterprise","o":"http://localhost:3000/enterprise","sdkn":"@vercel/analytics/next","sdkv":"1.6.1","sv":"0.1.3","ts":1773497804205} /_vercel/insights/view
-[00:00:57.518] Browser LOG     %c[Vercel Web Analytics]%c [view] http://localhost:3000/blog color: rgb(120, 120, 120) color: inherit {"dp":"/blog","o":"http://localhost:3000/blog","sdkn":"@vercel/analytics/next","sdkv":"1.6.1","sv":"0.1.3","ts":1773497805264} /_vercel/insights/view
-[00:01:12.119] Browser LOG     %c[Vercel Web Analytics]%c [view] http://localhost:3000/roles color: rgb(120, 120, 120) color: inherit {"dp":"/roles","o":"http://localhost:3000/roles","sdkn":"@vercel/analytics/next","sdkv":"1.6.1","sv":"0.1.3","ts":1773497819865} /_vercel/insights/view
-[00:01:19.582] Browser LOG     %c[Vercel Web Analytics]%c [view] http://localhost:3000/ color: rgb(120, 120, 120) color: inherit {"dp":"/","o":"http://localhost:3000/","sdkn":"@vercel/analytics/next","sdkv":"1.6.1","sv":"0.1.3","ts":1773497827327} /_vercel/insights/view
-[00:02:11.386] Server  LOG       Reload env: .env
-[00:03:26.529] Browser LOG     %c[Vercel Web Analytics]%c [view] http://localhost:3000/gig/cmmpsxapy0005gahkrusxv5cg color: rgb(120, 120, 120) color: inherit {"dp":"/gig/[id]","o":"http://localhost:3000/gig/cmmpsxapy0005gahkrusxv5cg","sdkn":"@vercel/analytics/next","sdkv":"1.6.1","sv":"0.1.3","ts":1773497954273} /_vercel/insights/view
-[00:03:26.969] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+[00:00:00.744] Server  LOG     ✓ Ready in 538ms
+[00:00:03.111] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:03.271] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
 
 ```
 new PrismaClient({
@@ -32,7 +16,10 @@ constructor() {
 }
 ```
           
-[00:03:27.527] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+[00:00:03.297] Browser LOG     %c[Vercel Web Analytics]%c Debug mode is enabled by default in development. No requests will be sent to the server. color: rgb(120, 120, 120) color: inherit
+[00:00:03.297] Browser LOG     %c[Vercel Web Analytics]%c Running queued event color: rgb(120, 120, 120) color: inherit pageview {"path":"/","route":"/"}
+[00:00:03.297] Browser LOG     %c[Vercel Web Analytics]%c [view] http://localhost:3000/ color: rgb(120, 120, 120) color: inherit {"dp":"/","o":"http://localhost:3000/","r":"","sdkn":"@vercel/analytics/next","sdkv":"1.6.1","sv":"0.1.3","ts":1773498257447} /_vercel/insights/view
+[00:00:05.847] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
 
 ```
 new PrismaClient({
@@ -48,10 +35,7 @@ constructor() {
 }
 ```
           
-[00:03:28.332] Browser LOG     %c[Vercel Web Analytics]%c [view] http://localhost:3000/gigs color: rgb(120, 120, 120) color: inherit {"dp":"/gigs","o":"http://localhost:3000/gigs","sdkn":"@vercel/analytics/next","sdkv":"1.6.1","sv":"0.1.3","ts":1773497956077} /_vercel/insights/view
-[00:03:29.549] Browser LOG     %c[Vercel Web Analytics]%c [view] http://localhost:3000/gig/cmmpsxapy0005gahkrusxv5cg color: rgb(120, 120, 120) color: inherit {"dp":"/gig/[id]","o":"http://localhost:3000/gig/cmmpsxapy0005gahkrusxv5cg","sdkn":"@vercel/analytics/next","sdkv":"1.6.1","sv":"0.1.3","ts":1773497957294} /_vercel/insights/view
-[00:03:29.698] Browser LOG     %c[Vercel Web Analytics]%c [view] http://localhost:3000/ color: rgb(120, 120, 120) color: inherit {"dp":"/","o":"http://localhost:3000/","sdkn":"@vercel/analytics/next","sdkv":"1.6.1","sv":"0.1.3","ts":1773497957443} /_vercel/insights/view
-[00:03:29.959] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+[00:00:05.913] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
 
 ```
 new PrismaClient({
@@ -67,7 +51,8 @@ constructor() {
 }
 ```
           
-[00:03:30.390] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+[00:00:05.914] Browser LOG     %c[Vercel Web Analytics]%c [view] http://localhost:3000/gigs color: rgb(120, 120, 120) color: inherit {"dp":"/gigs","o":"http://localhost:3000/gigs","sdkn":"@vercel/analytics/next","sdkv":"1.6.1","sv":"0.1.3","ts":1773498260084} /_vercel/insights/view
+[00:00:07.677] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
 
 ```
 new PrismaClient({
@@ -83,5 +68,235 @@ constructor() {
 }
 ```
           
-[00:06:22.244] Browser LOG     %c[Vercel Web Analytics]%c [view] http://localhost:3000/gigs color: rgb(120, 120, 120) color: inherit {"dp":"/gigs","o":"http://localhost:3000/gigs","sdkn":"@vercel/analytics/next","sdkv":"1.6.1","sv":"0.1.3","ts":1773498130017} /_vercel/insights/view
-[00:06:24.466] Browser LOG     %c[Vercel Web Analytics]%c [view] http://localhost:3000/ color: rgb(120, 120, 120) color: inherit {"dp":"/","o":"http://localhost:3000/","sdkn":"@vercel/analytics/next","sdkv":"1.6.1","sv":"0.1.3","ts":1773498132238} /_vercel/insights/view
+[00:00:07.849] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:00:08.591] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:00:08.878] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:00:12.403] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:00:12.443] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:00:12.444] Browser LOG     %c[Vercel Web Analytics]%c [view] http://localhost:3000/ color: rgb(120, 120, 120) color: inherit {"dp":"/","o":"http://localhost:3000/","sdkn":"@vercel/analytics/next","sdkv":"1.6.1","sv":"0.1.3","ts":1773498266641} /_vercel/insights/view
+[00:00:14.264] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:00:14.558] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:00:14.947] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:00:15.470] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:00:15.798] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:00:16.277] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:00:16.948] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:00:18.481] Browser LOG     %c[Vercel Web Analytics]%c [view] http://localhost:3000/post color: rgb(120, 120, 120) color: inherit {"dp":"/post","o":"http://localhost:3000/post","sdkn":"@vercel/analytics/next","sdkv":"1.6.1","sv":"0.1.3","ts":1773498272594} /_vercel/insights/view
+[00:00:18.481] Browser LOG     %c[Vercel Web Analytics]%c [view] http://localhost:3000/login?redirect=/post color: rgb(120, 120, 120) color: inherit {"dp":"/login","o":"http://localhost:3000/login?redirect=/post","sdkn":"@vercel/analytics/next","sdkv":"1.6.1","sv":"0.1.3","ts":1773498272677} /_vercel/insights/view
+[00:00:21.280] Browser LOG     %c[Vercel Web Analytics]%c [view] http://localhost:3000/signup color: rgb(120, 120, 120) color: inherit {"dp":"/signup","o":"http://localhost:3000/signup","sdkn":"@vercel/analytics/next","sdkv":"1.6.1","sv":"0.1.3","ts":1773498275478} /_vercel/insights/view
+[00:00:33.312] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:00:39.596] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:00:41.484] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:41.604] Browser LOG     %c[Vercel Web Analytics]%c Debug mode is enabled by default in development. No requests will be sent to the server. color: rgb(120, 120, 120) color: inherit
+[00:00:41.604] Browser LOG     %c[Vercel Web Analytics]%c Running queued event color: rgb(120, 120, 120) color: inherit pageview {"path":"/signup","route":"/signup"}
+[00:00:41.604] Browser LOG     %c[Vercel Web Analytics]%c [view] http://localhost:3000/signup color: rgb(120, 120, 120) color: inherit {"dp":"/signup","o":"http://localhost:3000/signup","r":"","sdkn":"@vercel/analytics/next","sdkv":"1.6.1","sv":"0.1.3","ts":1773498295802} /_vercel/insights/view
