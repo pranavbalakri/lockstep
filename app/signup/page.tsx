@@ -12,7 +12,6 @@ export default function SignupPage() {
   const [password, setPassword] = useState("")
   const [confirm, setConfirm] = useState("")
   const [role, setRole] = useState<"freelancer" | "client">("freelancer")
-  const [walletAddress, setWalletAddress] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const router = useRouter()
@@ -33,7 +32,7 @@ export default function SignupPage() {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, role, walletAddress }),
+        body: JSON.stringify({ name, email, password, role }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -103,20 +102,6 @@ export default function SignupPage() {
                   placeholder="Repeat password"
                   className="h-10 rounded-lg border bg-background px-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary"
                 />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-medium text-foreground">Ethereum wallet address</label>
-                <input
-                  type="text"
-                  required
-                  value={walletAddress}
-                  onChange={(e) => setWalletAddress(e.target.value)}
-                  placeholder="0x…"
-                  pattern="^0x[0-9a-fA-F]{40}$"
-                  className="h-10 rounded-lg border bg-background px-3 font-mono text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary"
-                />
-                <p className="text-xs text-muted-foreground">Used to deploy and interact with escrow contracts.</p>
               </div>
 
               {/* Role toggle */}

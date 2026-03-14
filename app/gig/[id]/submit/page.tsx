@@ -37,11 +37,7 @@ export default function SubmitPage({ params }: { params: Promise<{ id: string }>
       setUser(meData.user)
 
       if (!gigData?.gig) { router.push("/gigs"); return }
-      const hasAccepted = gigData.gig.requests?.some(
-        (r: { freelancerId: string; status: string }) =>
-          r.freelancerId === meData.user.id && r.status === "accepted"
-      )
-      if (!hasAccepted || gigData.gig.status !== "in_progress") {
+      if (gigData.gig.freelancer?.id !== meData.user.id || gigData.gig.status !== "in_progress") {
         router.push(`/gig/${id}`)
         return
       }

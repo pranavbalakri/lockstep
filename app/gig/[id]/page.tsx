@@ -19,7 +19,7 @@ declare global {
   }
 }
 
-interface SessionUser { id: string; name: string; email: string; role: string }
+interface SessionUser { id: string; name: string; email: string; role: string; walletAddress?: string }
 
 interface GigData {
   id: string
@@ -71,6 +71,7 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
   const [showRequestForm, setShowRequestForm] = useState(false)
   const [proposal, setProposal] = useState("")
   const [timeline, setTimeline] = useState("")
+  const [walletInput, setWalletInput] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [requestError, setRequestError] = useState("")
   const [hasRequested, setHasRequested] = useState(false)
@@ -106,6 +107,25 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
     setRequestError("")
     if (!user) { router.push(`/login?redirect=/gig/${id}`); return }
     setSubmitting(true)
+    // Save wallet first if the gig needs ETH and user doesn't have one yet
+    if (gig?.ethAmount && gig.ethAmount > 0 && !user.walletAddress) {
+      if (!walletInput || !/^0x[0-9a-fA-F]{40}$/.test(walletInput)) {
+        setRequestError("A valid Ethereum wallet address is required for this gig.")
+        setSubmitting(false)
+        return
+      }
+      const walletRes = await fetch("/api/auth/me", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ walletAddress: walletInput }),
+      })
+      if (!walletRes.ok) {
+        setRequestError("Failed to save wallet address.")
+        setSubmitting(false)
+        return
+      }
+      setUser({ ...user, walletAddress: walletInput })
+    }
     const res = await fetch(`/api/gigs/${id}/requests`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -309,6 +329,19 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
                       className="h-10 rounded-lg border bg-background px-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary"
                     />
                   </div>
+                  {gig.ethAmount && gig.ethAmount > 0 && !user?.walletAddress && (
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-sm font-medium text-foreground">Your Ethereum wallet address</label>
+                      <input
+                        type="text"
+                        value={walletInput}
+                        onChange={(e) => setWalletInput(e.target.value)}
+                        placeholder="0x…"
+                        className="h-10 rounded-lg border bg-background px-3 font-mono text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary"
+                      />
+                      <p className="text-xs text-muted-foreground">Needed to deploy the escrow contract for this gig.</p>
+                    </div>
+                  )}
                   {gig.ethAmount && gig.ethAmount > 0 && (
                     <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
                       <p className="text-sm text-amber-800">This gig requires a <span className="font-semibold">Ξ {gig.ethAmount} ETH</span> escrow deposit. The contract will be deployed automatically when the freelancer accepts your request.</p>
@@ -402,13 +435,25 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
               </section>
             )}
 
-            {(gig.status === "completed" || gig.status === "disputed") && (
-              <div className={`mb-8 rounded-xl border p-5 ${gig.status === "completed" ? "bg-green-50 border-green-200" : "bg-destructive/5 border-destructive/20"}`}>
+            {gig.status === "completed" && (
+              <div className="mb-8 rounded-xl border border-green-200 bg-green-50 p-5">
                 <p className="font-medium text-foreground">
-                  {gig.status === "completed"
-                    ? `Payment released — project complete.${gig.contractAddress ? " Escrow funds sent to freelancer." : ""}`
-                    : `This gig is under dispute.${gig.contractAddress ? " Escrow funds returned to client." : ""}`}
+                  Payment released — project complete.{gig.contractAddress ? " Escrow funds sent to freelancer." : ""}
                 </p>
+              </div>
+            )}
+
+            {gig.status === "disputed" && (
+              <div className="mb-8 rounded-xl border border-destructive/20 bg-destructive/5 p-5">
+                <p className="font-medium text-foreground">This gig is under dispute.</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Both parties must submit their arguments for AI mediation to resolve the escrow.
+                </p>
+                {(isClient || isFreelancer) && (
+                  <Button asChild className="mt-3 rounded-full px-5" size="sm">
+                    <Link href={`/gig/${id}/mediate`}>Go to mediation</Link>
+                  </Button>
+                )}
               </div>
             )}
           </div>

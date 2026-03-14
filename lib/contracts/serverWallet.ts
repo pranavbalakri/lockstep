@@ -1,6 +1,7 @@
-import { createWalletClient, createPublicClient, http, privateKeyToAccount, defineChain } from "viem"
+import { createWalletClient, createPublicClient, http, defineChain } from "viem"
+import { privateKeyToAccount } from "viem/accounts"
 
-const RPC_URL = process.env.RPC_URL ?? "http://localhost:8545"
+const RPC_URL = process.env.ETH_RPC_URL ?? "http://localhost:8545"
 const RAW_KEY = process.env.DEPLOYER_PRIVATE_KEY ?? ""
 const PRIVATE_KEY = (RAW_KEY.startsWith("0x") ? RAW_KEY : `0x${RAW_KEY}`) as `0x${string}`
 

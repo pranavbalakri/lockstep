@@ -32,9 +32,13 @@ model Gig {
   skills       String   @default("[]")
   deliverables String
   status          String   @default("open")
-  ethAmount       Float?
-  contractAddress String?
-  createdAt       DateTime @default(now())
+  ethAmount          Float?
+  contractAddress    String?
+  clientArgument     String?
+  freelancerArgument String?
+  mediatorVerdict    String?
+  mediatorReasoning  String?
+  createdAt          DateTime @default(now())
 
   freelancer User         @relation("FreelancerGigs", fields: [freelancerId], references: [id])
   requests   Request[]
