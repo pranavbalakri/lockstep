@@ -30,8 +30,9 @@ model Gig {
   deadline     DateTime
   skills       String   @default("[]")
   deliverables String
-  status       String   @default("open")
-  createdAt    DateTime @default(now())
+  status          String   @default("open")
+  contractAddress String?
+  createdAt       DateTime @default(now())
 
   client     User         @relation("ClientGigs", fields: [clientId], references: [id])
   requests   Request[]
