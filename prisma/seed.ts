@@ -14,14 +14,17 @@ async function main() {
 
   const password = await bcrypt.hash("password123", 10)
 
+  const clientWallet = "0xB1Ea11ff06A187bE5811c5eCF4cE25eaEF156ae8"
+  const freelancerWallet = "0x266324a33E995D20Ac99CdB8a5CcdD476bBC4Be5"
+
   const alex = await prisma.user.create({
-    data: { name: "Alex Chen", email: "alex@lockstep.dev", password, role: "client" },
+    data: { name: "Alex Chen", email: "alex@lockstep.dev", password, role: "client", walletAddress: clientWallet },
   })
   const jordan = await prisma.user.create({
-    data: { name: "Jordan Kim", email: "jordan@lockstep.dev", password, role: "freelancer" },
+    data: { name: "Jordan Kim", email: "jordan@lockstep.dev", password, role: "freelancer", walletAddress: freelancerWallet },
   })
   const sam = await prisma.user.create({
-    data: { name: "Sam Patel", email: "sam@lockstep.dev", password, role: "freelancer" },
+    data: { name: "Sam Patel", email: "sam@lockstep.dev", password, role: "freelancer", walletAddress: freelancerWallet },
   })
 
   // Freelancers post their service gigs

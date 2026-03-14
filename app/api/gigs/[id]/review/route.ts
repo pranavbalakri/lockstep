@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { getSessionFromRequest } from "@/lib/auth"
+import { getServerClients } from "@/lib/contracts/serverWallet"
+import { DEADDROP_ABI } from "@/lib/contracts/DeadDrop"
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -23,6 +25,21 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const { action } = await req.json()
   if (!["accept", "dispute"].includes(action)) {
     return NextResponse.json({ error: "Invalid action" }, { status: 400 })
+  }
+
+  if (gig.contractAddress) {
+    try {
+      const { walletClient, account } = getServerClients()
+      await walletClient.writeContract({
+        account,
+        address: gig.contractAddress as `0x${string}`,
+        abi: DEADDROP_ABI,
+        functionName: action === "accept" ? "release" : "dispute",
+      })
+    } catch (e: unknown) {
+      const err = e as { message?: string }
+      return NextResponse.json({ error: err.message ?? "On-chain transaction failed" }, { status: 500 })
+    }
   }
 
   const newStatus = action === "accept" ? "completed" : "disputed"
