@@ -28,7 +28,9 @@ interface Gig {
   freelancer: { id: string; name: string }
 }
 
-export default function GigsPage() {
+import { Suspense } from "react"
+
+function GigsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -230,5 +232,13 @@ export default function GigsPage() {
         </div>
       </div>
     </main>
+  )
+}
+
+export default function GigsPage() {
+  return (
+    <Suspense>
+      <GigsContent />
+    </Suspense>
   )
 }
