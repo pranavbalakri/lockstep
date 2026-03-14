@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "pnpm --dir web dev",
     "build": "pnpm --dir web build",
-    "lint": "pnpm --dir web lint"
+    "lint": "pnpm --dir web lint",
+    "verify:local": "node ./web/scripts/verify-local.mjs"
   }
 }

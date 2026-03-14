@@ -86,3 +86,22 @@ forge script script/Deploy.s.sol:DeployDeadDrop --rpc-url "$NEXT_PUBLIC_RPC_URL"
 ```
 
 The contract ABI is generated at `contracts/out/DeadDrop.sol/DeadDrop.json`.
+
+## Local verification
+
+To prove the escrow can actually move ETH from the client wallet to the freelancer wallet on a local chain:
+
+1. Start Anvil:
+
+```bash
+anvil --port 8545 --host 127.0.0.1
+```
+
+2. In another terminal, run:
+
+```bash
+cd deaddrop
+pnpm verify:local
+```
+
+By default this uses Anvil account `0` as the client and account `1` as the freelancer, deploys a fresh `DeadDrop` contract, deposits `1 ETH`, releases it, and confirms the freelancer balance increased by exactly `1 ETH`.
