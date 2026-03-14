@@ -10,15 +10,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const request = await prisma.request.findUnique({
     where: { id },
     include: {
-      freelancer: { select: { id: true, name: true, email: true } },
-      gig: { select: { id: true, title: true, clientId: true } },
+      client: { select: { id: true, name: true, email: true } },
+      gig: { select: { id: true, title: true, freelancerId: true } },
     },
   })
   if (!request) return NextResponse.json({ error: "Not found" }, { status: 404 })
 
-  const isClient = session.role === "client" && request.gig.clientId === session.id
-  const isFreelancer = session.role === "freelancer" && request.freelancerId === session.id
-  if (!isClient && !isFreelancer) {
+  const isFreelancer = session.role === "freelancer" && request.gig.freelancerId === session.id
+  const isClient = session.role === "client" && request.clientId === session.id
+  if (!isFreelancer && !isClient) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
@@ -28,13 +28,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const session = await getSessionFromRequest(req)
-  if (!session || session.role !== "freelancer") {
+  if (!session || session.role !== "client") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
   const request = await prisma.request.findUnique({ where: { id } })
   if (!request) return NextResponse.json({ error: "Not found" }, { status: 404 })
-  if (request.freelancerId !== session.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  if (request.clientId !== session.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   if (request.status !== "pending") {
     return NextResponse.json({ error: "Only pending requests can be withdrawn" }, { status: 400 })
   }

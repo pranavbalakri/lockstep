@@ -12,8 +12,9 @@ model User {
   name      String
   email     String   @unique
   password  String
-  role      String   @default("freelancer")
-  createdAt DateTime @default(now())
+  role          String   @default("freelancer")
+  walletAddress String?
+  createdAt     DateTime @default(now())
 
   gigs        Gig[]        @relation("FreelancerGigs")
   requests    Request[]    @relation("ClientRequests")

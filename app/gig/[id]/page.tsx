@@ -34,7 +34,7 @@ interface GigData {
   contractAddress?: string
   createdAt: string
   requestCount: number
-  freelancer: { id: string; name: string }
+  freelancer: { id: string; name: string; walletAddress?: string }
   requests: { id: string; clientId: string; status: string }[]
   submission?: {
     textContent?: string
@@ -78,7 +78,6 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
   const [reviewError, setReviewError] = useState("")
   const [fundLoading, setFundLoading] = useState(false)
   const [fundError, setFundError] = useState("")
-  const [freelancerWallet, setFreelancerWallet] = useState("")
   const [ethAmount, setEthAmount] = useState("")
   const router = useRouter()
 
@@ -129,11 +128,14 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
     try {
       const { walletClient, publicClient, account } = await getWalletClients()
 
+      const freelancerWalletAddress = gig?.freelancer.walletAddress
+      if (!freelancerWalletAddress) throw new Error("Freelancer has no wallet address on file")
+
       // Deploy the escrow contract
       const deployHash = await walletClient.deployContract({
         abi: DEADDROP_ABI,
         bytecode: DEADDROP_BYTECODE,
-        args: [account, freelancerWallet as `0x${string}`],
+        args: [account, freelancerWalletAddress as `0x${string}`],
       })
 
       const receipt = await publicClient.waitForTransactionReceipt({ hash: deployHash })
@@ -351,17 +353,6 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
                   Deploy and fund the on-chain escrow to lock payment until delivery is verified.
                 </p>
                 <form onSubmit={fundEscrow} className="flex flex-col gap-4">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-sm font-medium text-foreground">Freelancer wallet address</label>
-                    <input
-                      required
-                      value={freelancerWallet}
-                      onChange={(e) => setFreelancerWallet(e.target.value)}
-                      placeholder="0x…"
-                      pattern="^0x[0-9a-fA-F]{40}$"
-                      className="h-10 rounded-lg border bg-background px-3 font-mono text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary"
-                    />
-                  </div>
                   <div className="flex flex-col gap-1.5">
                     <label className="text-sm font-medium text-foreground">Amount to deposit (ETH)</label>
                     <input

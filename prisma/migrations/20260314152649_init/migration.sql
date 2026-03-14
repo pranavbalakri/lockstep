@@ -5,6 +5,7 @@ CREATE TABLE "User" (
     "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
     "role" TEXT NOT NULL DEFAULT 'freelancer',
+    "walletAddress" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
@@ -22,6 +23,7 @@ CREATE TABLE "Gig" (
     "skills" TEXT NOT NULL DEFAULT '[]',
     "deliverables" TEXT NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'open',
+    "contractAddress" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Gig_pkey" PRIMARY KEY ("id")

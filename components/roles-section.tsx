@@ -16,7 +16,7 @@ interface Gig {
   category: string
   status: string
   requestCount: number
-  client: { id: string; name: string }
+  freelancer: { id: string; name: string }
   createdAt: string
 }
 

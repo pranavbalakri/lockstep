@@ -9,11 +9,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const gig = await prisma.gig.findUnique({ where: { id } })
+  const gig = await prisma.gig.findUnique({
+    where: { id },
+    include: { requests: { where: { status: "accepted" }, select: { clientId: true } } },
+  })
   if (!gig) return NextResponse.json({ error: "Not found" }, { status: 404 })
-  if (gig.clientId !== session.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   if (gig.status !== "in_progress") {
     return NextResponse.json({ error: "Gig must be in progress to set contract address" }, { status: 400 })
+  }
+  const acceptedClientId = gig.requests[0]?.clientId
+  if (!acceptedClientId || acceptedClientId !== session.id) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
   const { contractAddress } = await req.json()

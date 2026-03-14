@@ -7,7 +7,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   const gig = await prisma.gig.findUnique({
     where: { id },
     include: {
-      freelancer: { select: { id: true, name: true } },
+      freelancer: { select: { id: true, name: true, walletAddress: true } },
       requests: { select: { id: true, clientId: true, status: true } },
       submission: true,
     },
@@ -27,13 +27,13 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const session = await getSessionFromRequest(req)
-  if (!session || session.role !== "client") {
+  if (!session || session.role !== "freelancer") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
   const gig = await prisma.gig.findUnique({ where: { id } })
   if (!gig) return NextResponse.json({ error: "Not found" }, { status: 404 })
-  if (gig.clientId !== session.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  if (gig.freelancerId !== session.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   if (gig.status !== "open") return NextResponse.json({ error: "Only open gigs can be edited" }, { status: 400 })
 
   const { title, category, description, budget, deadline, skills, deliverables } = await req.json()
@@ -57,13 +57,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const session = await getSessionFromRequest(req)
-  if (!session || session.role !== "client") {
+  if (!session || session.role !== "freelancer") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
   const gig = await prisma.gig.findUnique({ where: { id } })
   if (!gig) return NextResponse.json({ error: "Not found" }, { status: 404 })
-  if (gig.clientId !== session.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  if (gig.freelancerId !== session.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   if (gig.status !== "open") return NextResponse.json({ error: "Only open gigs can be deleted" }, { status: 400 })
 
   await prisma.request.deleteMany({ where: { gigId: id } })
