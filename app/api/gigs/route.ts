@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
   let gigs = await prisma.gig.findMany({
     where,
     orderBy,
-    include: { client: { select: { id: true, name: true } }, requests: { select: { id: true } } },
+    include: { freelancer: { select: { id: true, name: true } }, requests: { select: { id: true } } },
   })
 
   if (skill) {
@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const session = await getSessionFromRequest(req)
-  if (!session || session.role !== "client") {
+  if (!session || session.role !== "freelancer") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
 
     const gig = await prisma.gig.create({
       data: {
-        clientId: session.id,
+        freelancerId: session.id,
         title,
         category,
         description,

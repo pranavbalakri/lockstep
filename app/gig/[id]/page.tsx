@@ -23,8 +23,8 @@ interface GigData {
   status: string
   createdAt: string
   requestCount: number
-  client: { id: string; name: string }
-  requests: { id: string; freelancerId: string; status: string }[]
+  freelancer: { id: string; name: string }
+  requests: { id: string; clientId: string; status: string }[]
   submission?: {
     textContent?: string
     url?: string
@@ -63,9 +63,9 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
       if (gigData?.gig) setGig(gigData.gig)
       if (meData?.user) {
         setUser(meData.user)
-        if (gigData?.gig && meData.user.role === "freelancer") {
+        if (gigData?.gig && meData.user.role === "client") {
           const already = gigData.gig.requests?.some(
-            (r: { freelancerId: string }) => r.freelancerId === meData.user.id
+            (r: { clientId: string }) => r.clientId === meData.user.id
           )
           setHasRequested(already)
         }
@@ -138,11 +138,11 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
     )
   }
 
-  const isClient = user?.id === gig.client.id
-  const isFreelancer = user?.role === "freelancer"
-  const myRequest = gig.requests?.find((r) => r.freelancerId === user?.id)
+  const isFreelancer = user?.id === gig.freelancer.id
+  const isClient = user?.role === "client"
+  const myRequest = gig.requests?.find((r) => r.clientId === user?.id)
   const myRequestAccepted = myRequest?.status === "accepted"
-  const canSubmit = isFreelancer && myRequestAccepted && gig.status === "in_progress"
+  const canSubmit = isFreelancer && gig.status === "in_progress"
 
   return (
     <main className="min-h-screen bg-background">
@@ -173,13 +173,13 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
                 <Avatar className="h-6 w-6">
                   <AvatarFallback
                     className="text-[10px] font-medium text-white"
-                    style={{ backgroundColor: getAvatarColor(gig.client.id) }}
+                    style={{ backgroundColor: getAvatarColor(gig.freelancer.id) }}
                   >
-                    {getInitials(gig.client.name)}
+                    {getInitials(gig.freelancer.name)}
                   </AvatarFallback>
                 </Avatar>
                 <span className="text-sm text-muted-foreground">
-                  Posted by <span className="text-foreground">{gig.client.name}</span> · {formatDistanceToNow(new Date(gig.createdAt), { addSuffix: true })}
+                  Offered by <span className="text-foreground">{gig.freelancer.name}</span> · {formatDistanceToNow(new Date(gig.createdAt), { addSuffix: true })}
                 </span>
               </div>
             </div>
@@ -213,16 +213,16 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
             {/* Request Form */}
             {showRequestForm && (
               <section className="mb-8 rounded-xl border bg-card p-5">
-                <h2 className="mb-4 font-serif text-lg font-medium text-foreground">Submit a Request</h2>
+                <h2 className="mb-4 font-serif text-lg font-medium text-foreground">Request to Hire</h2>
                 <form onSubmit={submitRequest} className="flex flex-col gap-4">
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-sm font-medium text-foreground">Cover letter / Proposal</label>
+                    <label className="text-sm font-medium text-foreground">Project description</label>
                     <textarea
                       required
                       value={proposal}
                       onChange={(e) => setProposal(e.target.value)}
                       maxLength={3000}
-                      placeholder="Describe your relevant experience, approach, and why you're the right fit…"
+                      placeholder="Describe your project, requirements, and why you'd like to work with this freelancer…"
                       rows={5}
                       className="rounded-lg border bg-background px-3 py-2.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary resize-none"
                     />
@@ -314,15 +314,15 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
               </div>
 
               {/* CTA area */}
-              {isClient && (
+              {isFreelancer && (
                 <Button asChild variant="outline" className="w-full rounded-full">
-                  <Link href={`/post`}>Edit Job</Link>
+                  <Link href={`/post`}>Edit Gig</Link>
                 </Button>
               )}
 
-              {isFreelancer && gig.status === "open" && (
+              {isClient && gig.status === "open" && (
                 hasRequested ? (
-                  <p className="text-center text-sm text-muted-foreground">Request submitted ✓</p>
+                  <p className="text-center text-sm text-muted-foreground">Request sent ✓</p>
                 ) : showRequestForm ? null : (
                   <Button
                     className="w-full rounded-full"
@@ -331,7 +331,7 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
                       setShowRequestForm(true)
                     }}
                   >
-                    Submit a Request
+                    Request to Hire
                   </Button>
                 )
               )}
@@ -344,7 +344,7 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
 
               {!user && gig.status === "open" && (
                 <Button asChild className="w-full rounded-full">
-                  <Link href={`/login?redirect=/gig/${id}`}>Log in to Request</Link>
+                  <Link href={`/login?redirect=/gig/${id}`}>Log in to Hire</Link>
                 </Button>
               )}
             </div>

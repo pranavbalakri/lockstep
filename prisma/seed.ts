@@ -24,13 +24,15 @@ async function main() {
     data: { name: "Sam Patel", email: "sam@lockstep.dev", password, role: "freelancer" },
   })
 
+  // Freelancers post their service gigs
+  // jordan posts 6 gigs, sam posts 6 gigs
   const gigs = await Promise.all([
     prisma.gig.create({
       data: {
-        clientId: alex.id,
-        title: "Build React Dashboard",
+        freelancerId: jordan.id,
+        title: "React Dashboard Development",
         category: "Development",
-        description: "Looking for an experienced React developer to build a comprehensive admin dashboard. The dashboard needs real-time data visualization, user management, and analytics. Must integrate with our existing REST API and handle large datasets efficiently.",
+        description: "I build production-ready React admin dashboards for SaaS companies. With 4+ years and 15+ dashboards shipped, I specialize in real-time data visualization, user management, and analytics. I integrate with any REST API and handle large datasets efficiently using virtualization and pagination.",
         budget: 2500,
         deadline: new Date("2026-04-15"),
         skills: JSON.stringify(["React", "TypeScript", "Tailwind CSS", "REST API"]),
@@ -40,10 +42,10 @@ async function main() {
     }),
     prisma.gig.create({
       data: {
-        clientId: alex.id,
-        title: "Logo Design for Fintech Startup",
+        freelancerId: jordan.id,
+        title: "Fintech Brand Identity Design",
         category: "Design",
-        description: "We need a modern, trustworthy logo for our fintech startup. The brand should feel innovative yet secure. We want to explore both wordmark and icon-based options.",
+        description: "I craft modern, trustworthy brand identities for fintech companies. 6 years of experience working with payment startups and financial platforms. I explore both wordmark and icon-based options and deliver concepts that balance approachability with credibility.",
         budget: 800,
         deadline: new Date("2026-03-30"),
         skills: JSON.stringify(["Logo Design", "Brand Identity", "Figma", "Illustrator"]),
@@ -53,23 +55,10 @@ async function main() {
     }),
     prisma.gig.create({
       data: {
-        clientId: alex.id,
-        title: "Smart Contract Audit",
-        category: "Blockchain",
-        description: "We need a thorough security audit of our ERC-20 token contract and staking mechanism before mainnet deployment. Looking for an auditor with proven track record.",
-        budget: 5000,
-        deadline: new Date("2026-04-01"),
-        skills: JSON.stringify(["Solidity", "Security Auditing", "EVM", "DeFi"]),
-        deliverables: "Full audit report with severity ratings, proof-of-concept exploits for any vulnerabilities found, and remediation recommendations.",
-        status: "open",
-      },
-    }),
-    prisma.gig.create({
-      data: {
-        clientId: alex.id,
-        title: "Technical Writing (API Docs)",
+        freelancerId: jordan.id,
+        title: "API Documentation Writing",
         category: "Writing",
-        description: "Our REST API has grown significantly and our documentation is outdated. We need a technical writer to create comprehensive, developer-friendly documentation with examples.",
+        description: "I write comprehensive, developer-friendly API documentation that engineers actually want to read. 5 years of experience documenting REST APIs — my docs are structured around developer jobs-to-be-done with real working examples.",
         budget: 1200,
         deadline: new Date("2026-04-10"),
         skills: JSON.stringify(["Technical Writing", "REST API", "OpenAPI", "Markdown"]),
@@ -79,23 +68,10 @@ async function main() {
     }),
     prisma.gig.create({
       data: {
-        clientId: alex.id,
-        title: "iOS App Bug Fixes",
-        category: "Development",
-        description: "Our iOS app has 3 critical bugs causing crashes and 5 minor UI issues. Need an experienced iOS developer to diagnose and fix all reported issues.",
-        budget: 3000,
-        deadline: new Date("2026-03-25"),
-        skills: JSON.stringify(["Swift", "iOS", "Xcode", "UIKit"]),
-        deliverables: "All 8 issues resolved, regression tests added, and a brief report explaining root causes and fixes applied.",
-        status: "open",
-      },
-    }),
-    prisma.gig.create({
-      data: {
-        clientId: alex.id,
-        title: "Data Pipeline (Python/Airflow)",
+        freelancerId: jordan.id,
+        title: "Airflow Data Pipeline Engineering",
         category: "Data",
-        description: "We need to build an automated data pipeline that ingests data from 3 sources, transforms it, and loads it into our data warehouse. Must handle failures gracefully.",
+        description: "I build production-grade Apache Airflow data pipelines. 4 years experience, pipelines handling 10M+ records/day. I design idempotent DAGs with proper retry logic, dead-letter queues, and Slack alerting. All pipelines come with runbooks.",
         budget: 4500,
         deadline: new Date("2026-04-20"),
         skills: JSON.stringify(["Python", "Apache Airflow", "SQL", "ETL", "Data Engineering"]),
@@ -105,36 +81,10 @@ async function main() {
     }),
     prisma.gig.create({
       data: {
-        clientId: alex.id,
-        title: "Figma to Next.js Conversion",
-        category: "Development",
-        description: "Convert 12 Figma screens into a pixel-perfect Next.js application using Tailwind CSS. The designs are clean and modern — we need faithful implementation.",
-        budget: 1800,
-        deadline: new Date("2026-04-05"),
-        skills: JSON.stringify(["Next.js", "React", "Tailwind CSS", "Figma"]),
-        deliverables: "All 12 screens implemented, responsive on mobile and desktop, deployed to Vercel.",
-        status: "open",
-      },
-    }),
-    prisma.gig.create({
-      data: {
-        clientId: alex.id,
-        title: "SEO Content (10 Articles)",
-        category: "Writing",
-        description: "Need 10 high-quality blog articles targeting specific keywords in the SaaS space. Each article should be 1,500–2,000 words, well-researched, and SEO-optimized.",
-        budget: 600,
-        deadline: new Date("2026-04-12"),
-        skills: JSON.stringify(["SEO", "Content Writing", "SaaS", "Keyword Research"]),
-        deliverables: "10 published-ready articles in Google Docs format with meta descriptions, suggested internal links, and image alt text.",
-        status: "open",
-      },
-    }),
-    prisma.gig.create({
-      data: {
-        clientId: alex.id,
-        title: "Marketing Strategy & Growth Plan",
+        freelancerId: jordan.id,
+        title: "B2B SaaS Marketing Strategy",
         category: "Marketing",
-        description: "Looking for a B2B SaaS marketing strategist to create a 6-month go-to-market plan targeting SMBs. Should include paid, organic, and partnership channels.",
+        description: "I create 6-month go-to-market plans for B2B SaaS companies targeting SMBs. I map the full funnel across paid, organic, and partnership channels, with realistic budget allocations and monthly execution plans you can actually follow.",
         budget: 3500,
         deadline: new Date("2026-04-18"),
         skills: JSON.stringify(["B2B Marketing", "SaaS", "Growth", "GTM Strategy"]),
@@ -144,10 +94,62 @@ async function main() {
     }),
     prisma.gig.create({
       data: {
-        clientId: alex.id,
-        title: "ML Model: Churn Prediction",
+        freelancerId: jordan.id,
+        title: "Figma to Next.js Implementation",
+        category: "Development",
+        description: "I convert Figma designs into pixel-perfect Next.js applications using Tailwind CSS. I live in both tools and deliver faithful, responsive implementations. Clean component structure, accessible markup, deployed to Vercel.",
+        budget: 1800,
+        deadline: new Date("2026-04-05"),
+        skills: JSON.stringify(["Next.js", "React", "Tailwind CSS", "Figma"]),
+        deliverables: "All screens implemented, responsive on mobile and desktop, deployed to Vercel.",
+        status: "open",
+      },
+    }),
+    prisma.gig.create({
+      data: {
+        freelancerId: sam.id,
+        title: "Smart Contract Security Audit",
+        category: "Blockchain",
+        description: "I perform thorough security audits of Solidity smart contracts before mainnet deployment. Certified auditor with a track record of catching critical reentrancy, overflow, and access-control bugs. I combine static analysis, manual review, and fuzzing for complete coverage.",
+        budget: 5000,
+        deadline: new Date("2026-04-01"),
+        skills: JSON.stringify(["Solidity", "Security Auditing", "EVM", "DeFi"]),
+        deliverables: "Full audit report with severity ratings, proof-of-concept exploits for any vulnerabilities found, and remediation recommendations.",
+        status: "open",
+      },
+    }),
+    prisma.gig.create({
+      data: {
+        freelancerId: sam.id,
+        title: "iOS Bug Fix & Stabilization",
+        category: "Development",
+        description: "I diagnose and fix iOS bugs — crashes, memory leaks, and UI issues. 7 years Swift experience. My process: reproduce first, document root cause, fix, write regression tests. I don't just patch symptoms.",
+        budget: 3000,
+        deadline: new Date("2026-03-25"),
+        skills: JSON.stringify(["Swift", "iOS", "Xcode", "UIKit"]),
+        deliverables: "All reported issues resolved, regression tests added, and a root-cause report for each fix.",
+        status: "open",
+      },
+    }),
+    prisma.gig.create({
+      data: {
+        freelancerId: sam.id,
+        title: "SEO Content — 10 SaaS Articles",
+        category: "Writing",
+        description: "I write long-form SEO content for SaaS companies. Each article is 1,500–2,000 words, keyword-targeted, well-researched, and structured for both readers and search engines. No fluff, no AI filler.",
+        budget: 600,
+        deadline: new Date("2026-04-12"),
+        skills: JSON.stringify(["SEO", "Content Writing", "SaaS", "Keyword Research"]),
+        deliverables: "10 published-ready articles in Google Docs with meta descriptions, suggested internal links, and image alt text.",
+        status: "open",
+      },
+    }),
+    prisma.gig.create({
+      data: {
+        freelancerId: sam.id,
+        title: "ML Churn Prediction Model",
         category: "Data",
-        description: "Build a churn prediction model using our historical subscription data. We have 2 years of data and need a model that can identify at-risk users 30 days in advance.",
+        description: "I build production-ready churn prediction models from historical subscription data. I can identify at-risk users 30 days in advance with ≥80% precision. Deliverable includes a trained model, feature importance report, and a live API endpoint.",
         budget: 6000,
         deadline: new Date("2026-05-01"),
         skills: JSON.stringify(["Python", "Machine Learning", "scikit-learn", "Data Analysis"]),
@@ -157,10 +159,10 @@ async function main() {
     }),
     prisma.gig.create({
       data: {
-        clientId: alex.id,
+        freelancerId: sam.id,
         title: "Brand Identity System",
         category: "Design",
-        description: "Complete brand overhaul for a B2C wellness app. Need logo, color palette, typography, icon set, and component library in Figma.",
+        description: "I design complete brand identity systems for B2C apps. Logo, color palette, typography, icon set, and a full Figma component library — everything you need to build consistently at scale.",
         budget: 4200,
         deadline: new Date("2026-04-25"),
         skills: JSON.stringify(["Brand Design", "Figma", "Design Systems", "Illustration"]),
@@ -170,10 +172,10 @@ async function main() {
     }),
     prisma.gig.create({
       data: {
-        clientId: alex.id,
-        title: "Email Marketing Automation",
+        freelancerId: sam.id,
+        title: "HubSpot Email Automation Setup",
         category: "Marketing",
-        description: "Set up a complete email marketing automation system in HubSpot. Includes onboarding sequence (7 emails), re-engagement campaign, and monthly newsletter template.",
+        description: "I set up complete email marketing automation systems in HubSpot. Onboarding sequences, re-engagement campaigns, newsletter templates — all with A/B test variants and analytics configured from day one.",
         budget: 1400,
         deadline: new Date("2026-04-08"),
         skills: JSON.stringify(["HubSpot", "Email Marketing", "Marketing Automation", "Copywriting"]),
@@ -183,29 +185,21 @@ async function main() {
     }),
   ])
 
+  // Alex (client) sends hire requests to freelancers' gigs
   await prisma.request.create({
     data: {
       gigId: gigs[0].id,
-      freelancerId: jordan.id,
-      proposal: "I've built 15+ React dashboards for SaaS companies over the past 4 years. I specialize in real-time data visualization using Recharts and D3. I'll start with a component audit, then build the 5 views iteratively with weekly check-ins.",
+      clientId: alex.id,
+      proposal: "We're building an internal ops dashboard for our 50-person team. Need 5 views: team overview, project tracker, analytics, user management, and settings. We have a well-documented REST API ready. Timeline and budget work for us.",
       proposedTimeline: "3 weeks",
       status: "pending",
     },
   })
   await prisma.request.create({
     data: {
-      gigId: gigs[0].id,
-      freelancerId: sam.id,
-      proposal: "Senior frontend engineer here with deep React expertise. I've delivered similar dashboards for fintech clients — happy to share case studies. My approach: design system first, then views.",
-      proposedTimeline: "2.5 weeks",
-      status: "pending",
-    },
-  })
-  await prisma.request.create({
-    data: {
       gigId: gigs[1].id,
-      freelancerId: jordan.id,
-      proposal: "Brand designer with 6 years of fintech experience. I've worked with 3 payment startups. I'll deliver concepts that balance approachability with credibility.",
+      clientId: alex.id,
+      proposal: "We're launching a B2B payments platform and need a logo that feels both trustworthy and modern. We have a rough brand direction (navy + gold) but are open to your exploration. Budget approved.",
       proposedTimeline: "10 days",
       status: "pending",
     },
@@ -213,46 +207,44 @@ async function main() {
   await prisma.request.create({
     data: {
       gigId: gigs[2].id,
-      freelancerId: sam.id,
-      proposal: "Certified smart contract auditor. I'll perform static analysis, manual review, and fuzzing. Past audits have caught critical reentrancy and overflow bugs.",
-      proposedTimeline: "7 days",
-      status: "pending",
-    },
-  })
-
-  // in_progress gig has an accepted request
-  await prisma.request.create({
-    data: {
-      gigId: gigs[3].id,
-      freelancerId: jordan.id,
-      proposal: "Technical writer with 5 years of API documentation experience. I've written docs for Stripe, Twilio, and SendGrid-style APIs. I'll structure everything around developer jobs-to-be-done.",
+      clientId: alex.id,
+      proposal: "Our REST API has 40+ endpoints and the docs haven't been updated in 8 months. We need the full reference + getting started guide + Postman collection. Codebase access can be provided.",
       proposedTimeline: "2 weeks",
       status: "accepted",
     },
   })
   await prisma.request.create({
     data: {
-      gigId: gigs[4].id,
-      freelancerId: sam.id,
-      proposal: "iOS developer, 7 years Swift experience. Bug fixes are my specialty — I'll reproduce each issue first, document the root cause, then fix and write regression tests.",
+      gigId: gigs[6].id,
+      clientId: alex.id,
+      proposal: "We're deploying an ERC-20 token + staking contract to mainnet next month. Need a full audit before we go live. Happy to share the repo privately. Budget and timeline work.",
+      proposedTimeline: "7 days",
+      status: "pending",
+    },
+  })
+  await prisma.request.create({
+    data: {
+      gigId: gigs[7].id,
+      clientId: alex.id,
+      proposal: "Our iOS app has 3 crash bugs (filed in Linear with reproduction steps) and 5 UI issues. We need all 8 fixed with regression tests. Can share TestFlight access and our codebase.",
       proposedTimeline: "5 days",
       status: "pending",
     },
   })
   await prisma.request.create({
     data: {
-      gigId: gigs[5].id,
-      freelancerId: jordan.id,
-      proposal: "Data engineer with 4 years Airflow experience. I've built pipelines handling 10M+ records/day. I'll design idempotent DAGs with proper retry logic and Slack alerting.",
+      gigId: gigs[9].id,
+      clientId: alex.id,
+      proposal: "We have 2 years of subscription data (anonymized) and want to identify churn risk 30 days out. We can provide CSV exports and a sandbox DB. The API endpoint should integrate with our existing Node backend.",
       proposedTimeline: "3 weeks",
       status: "pending",
     },
   })
   await prisma.request.create({
     data: {
-      gigId: gigs[6].id,
-      freelancerId: sam.id,
-      proposal: "Full-stack dev who lives in Figma and Next.js. I'll match your designs pixel-perfectly and make every interaction feel right. Ship in under 2 weeks.",
+      gigId: gigs[5].id,
+      clientId: alex.id,
+      proposal: "We have 12 Figma screens fully designed and approved. Need pixel-perfect implementation in Next.js with Tailwind. Designs are clean — no edge cases or complex animations. Vercel deploy at the end.",
       proposedTimeline: "12 days",
       status: "pending",
     },

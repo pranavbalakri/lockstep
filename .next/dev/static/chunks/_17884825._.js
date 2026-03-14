@@ -639,9 +639,9 @@ function GigPage({ params }) {
                     if (gigData?.gig) setGig(gigData.gig);
                     if (meData?.user) {
                         setUser(meData.user);
-                        if (gigData?.gig && meData.user.role === "freelancer") {
+                        if (gigData?.gig && meData.user.role === "client") {
                             const already = gigData.gig.requests?.some({
-                                "GigPage.useEffect": (r)=>r.freelancerId === meData.user.id
+                                "GigPage.useEffect": (r)=>r.clientId === meData.user.id
                             }["GigPage.useEffect"]);
                             setHasRequested(already);
                         }
@@ -797,11 +797,11 @@ function GigPage({ params }) {
             columnNumber: 7
         }, this);
     }
-    const isClient = user?.id === gig.client.id;
-    const isFreelancer = user?.role === "freelancer";
-    const myRequest = gig.requests?.find((r)=>r.freelancerId === user?.id);
+    const isFreelancer = user?.id === gig.freelancer.id;
+    const isClient = user?.role === "client";
+    const myRequest = gig.requests?.find((r)=>r.clientId === user?.id);
     const myRequestAccepted = myRequest?.status === "accepted";
-    const canSubmit = isFreelancer && myRequestAccepted && gig.status === "in_progress";
+    const canSubmit = isFreelancer && gig.status === "in_progress";
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("main", {
         className: "min-h-screen bg-background",
         children: [
@@ -895,9 +895,9 @@ function GigPage({ params }) {
                                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$avatar$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["AvatarFallback"], {
                                                         className: "text-[10px] font-medium text-white",
                                                         style: {
-                                                            backgroundColor: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$avatar$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["getAvatarColor"])(gig.client.id)
+                                                            backgroundColor: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$avatar$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["getAvatarColor"])(gig.freelancer.id)
                                                         },
-                                                        children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$avatar$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["getInitials"])(gig.client.name)
+                                                        children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$avatar$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["getInitials"])(gig.freelancer.name)
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/gig/[id]/page.tsx",
                                                         lineNumber: 174,
@@ -911,14 +911,14 @@ function GigPage({ params }) {
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                     className: "text-sm text-muted-foreground",
                                                     children: [
-                                                        "Posted by ",
+                                                        "Offered by ",
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                             className: "text-foreground",
-                                                            children: gig.client.name
+                                                            children: gig.freelancer.name
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/gig/[id]/page.tsx",
                                                             lineNumber: 182,
-                                                            columnNumber: 29
+                                                            columnNumber: 30
                                                         }, this),
                                                         " · ",
                                                         (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$date$2d$fns$2f$formatDistanceToNow$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatDistanceToNow"])(new Date(gig.createdAt), {
@@ -1029,7 +1029,7 @@ function GigPage({ params }) {
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
                                             className: "mb-4 font-serif text-lg font-medium text-foreground",
-                                            children: "Submit a Request"
+                                            children: "Request to Hire"
                                         }, void 0, false, {
                                             fileName: "[project]/app/gig/[id]/page.tsx",
                                             lineNumber: 216,
@@ -1044,7 +1044,7 @@ function GigPage({ params }) {
                                                     children: [
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
                                                             className: "text-sm font-medium text-foreground",
-                                                            children: "Cover letter / Proposal"
+                                                            children: "Project description"
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/gig/[id]/page.tsx",
                                                             lineNumber: 219,
@@ -1055,7 +1055,7 @@ function GigPage({ params }) {
                                                             value: proposal,
                                                             onChange: (e)=>setProposal(e.target.value),
                                                             maxLength: 3000,
-                                                            placeholder: "Describe your relevant experience, approach, and why you're the right fit…",
+                                                            placeholder: "Describe your project, requirements, and why you'd like to work with this freelancer…",
                                                             rows: 5,
                                                             className: "rounded-lg border bg-background px-3 py-2.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary resize-none"
                                                         }, void 0, false, {
@@ -1387,13 +1387,13 @@ function GigPage({ params }) {
                                         lineNumber: 311,
                                         columnNumber: 15
                                     }, this),
-                                    isClient && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
+                                    isFreelancer && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
                                         asChild: true,
                                         variant: "outline",
                                         className: "w-full rounded-full",
                                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
                                             href: `/post`,
-                                            children: "Edit Job"
+                                            children: "Edit Gig"
                                         }, void 0, false, {
                                             fileName: "[project]/app/gig/[id]/page.tsx",
                                             lineNumber: 319,
@@ -1404,9 +1404,9 @@ function GigPage({ params }) {
                                         lineNumber: 318,
                                         columnNumber: 17
                                     }, this),
-                                    isFreelancer && gig.status === "open" && (hasRequested ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                    isClient && gig.status === "open" && (hasRequested ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                         className: "text-center text-sm text-muted-foreground",
-                                        children: "Request submitted ✓"
+                                        children: "Request sent ✓"
                                     }, void 0, false, {
                                         fileName: "[project]/app/gig/[id]/page.tsx",
                                         lineNumber: 325,
@@ -1420,7 +1420,7 @@ function GigPage({ params }) {
                                             }
                                             setShowRequestForm(true);
                                         },
-                                        children: "Submit a Request"
+                                        children: "Request to Hire"
                                     }, void 0, false, {
                                         fileName: "[project]/app/gig/[id]/page.tsx",
                                         lineNumber: 327,
@@ -1447,7 +1447,7 @@ function GigPage({ params }) {
                                         className: "w-full rounded-full",
                                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
                                             href: `/login?redirect=/gig/${id}`,
-                                            children: "Log in to Request"
+                                            children: "Log in to Hire"
                                         }, void 0, false, {
                                             fileName: "[project]/app/gig/[id]/page.tsx",
                                             lineNumber: 347,

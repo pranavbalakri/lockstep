@@ -5,7 +5,7 @@ import { getSessionFromRequest } from "@/lib/auth"
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const session = await getSessionFromRequest(req)
-  if (!session || session.role !== "client") {
+  if (!session || session.role !== "freelancer") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
@@ -19,7 +19,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     include: { gig: true },
   })
   if (!request) return NextResponse.json({ error: "Not found" }, { status: 404 })
-  if (request.gig.clientId !== session.id) {
+  if (request.gig.freelancerId !== session.id) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 

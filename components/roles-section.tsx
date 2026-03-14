@@ -117,7 +117,7 @@ export function RolesSection() {
                 rate={`$${gig.budget.toLocaleString()}`}
                 hiredCount={gig.requestCount}
                 avatars={[
-                  { initials: getInitials(gig.client.name), color: getAvatarColor(gig.client.id) },
+                  { initials: getInitials(gig.freelancer.name), color: getAvatarColor(gig.freelancer.id) },
                 ]}
               />
             ))}

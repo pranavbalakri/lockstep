@@ -1,5 +1,17 @@
 {
+  "/api/auth/login/route": "app/api/auth/login/route.js",
+  "/api/auth/logout/route": "app/api/auth/logout/route.js",
   "/api/auth/me/route": "app/api/auth/me/route.js",
+  "/api/auth/signup/route": "app/api/auth/signup/route.js",
+  "/api/dashboard/client/route": "app/api/dashboard/client/route.js",
+  "/api/dashboard/freelancer/route": "app/api/dashboard/freelancer/route.js",
+  "/api/gigs/[id]/route": "app/api/gigs/[id]/route.js",
   "/api/gigs/route": "app/api/gigs/route.js",
-  "/page": "app/page.js"
+  "/dashboard/page": "app/dashboard/page.js",
+  "/gig/[id]/page": "app/gig/[id]/page.js",
+  "/gigs/page": "app/gigs/page.js",
+  "/login/page": "app/login/page.js",
+  "/page": "app/page.js",
+  "/roles/page": "app/roles/page.js",
+  "/signup/page": "app/signup/page.js"
 }

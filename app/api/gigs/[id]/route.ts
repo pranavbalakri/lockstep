@@ -6,8 +6,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   const gig = await prisma.gig.findUnique({
     where: { id },
     include: {
-      client: { select: { id: true, name: true } },
-      requests: { select: { id: true, freelancerId: true, status: true } },
+      freelancer: { select: { id: true, name: true } },
+      requests: { select: { id: true, clientId: true, status: true } },
       submission: true,
     },
   })

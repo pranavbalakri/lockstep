@@ -25,7 +25,7 @@ interface Gig {
   category: string
   status: string
   requestCount: number
-  client: { id: string; name: string }
+  freelancer: { id: string; name: string }
 }
 
 export default function GigsPage() {
@@ -194,7 +194,7 @@ export default function GigsPage() {
                       rate={`$${gig.budget.toLocaleString()}`}
                       hiredCount={gig.requestCount}
                       avatars={[
-                        { initials: getInitials(gig.client.name), color: getAvatarColor(gig.client.id) },
+                        { initials: getInitials(gig.freelancer.name), color: getAvatarColor(gig.freelancer.id) },
                       ]}
                     />
                   ))}

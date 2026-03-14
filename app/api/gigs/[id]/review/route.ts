@@ -10,12 +10,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   const gig = await prisma.gig.findUnique({ where: { id } })
-  if (!gig || gig.clientId !== session.id) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-  }
+  if (!gig) return NextResponse.json({ error: "Not found" }, { status: 404 })
   if (gig.status !== "submitted") {
     return NextResponse.json({ error: "No submission to review" }, { status: 400 })
   }
+
+  const acceptedRequest = await prisma.request.findFirst({
+    where: { gigId: id, clientId: session.id, status: "accepted" },
+  })
+  if (!acceptedRequest) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
   const { action } = await req.json()
   if (!["accept", "dispute"].includes(action)) {

@@ -887,8 +887,8 @@ function RolesSection() {
                             hiredCount: gig.requestCount,
                             avatars: [
                                 {
-                                    initials: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$avatar$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["getInitials"])(gig.client.name),
-                                    color: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$avatar$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["getAvatarColor"])(gig.client.id)
+                                    initials: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$avatar$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["getInitials"])(gig.freelancer.name),
+                                    color: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$avatar$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["getAvatarColor"])(gig.freelancer.id)
                                 }
                             ]
                         }, gig.id, false, {
