@@ -1,11 +1,12 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
   "/api/auth/me/route": "app/api/auth/me/route.js",
   "/api/gigs/[id]/route": "app/api/gigs/[id]/route.js",
   "/api/gigs/route": "app/api/gigs/route.js",
+  "/blog/page": "app/blog/page.js",
+  "/enterprise/page": "app/enterprise/page.js",
   "/gig/[id]/page": "app/gig/[id]/page.js",
   "/gigs/page": "app/gigs/page.js",
-  "/login/page": "app/login/page.js",
   "/page": "app/page.js",
-  "/post/page": "app/post/page.js"
+  "/research/page": "app/research/page.js",
+  "/roles/page": "app/roles/page.js"
 }
