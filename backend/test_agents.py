@@ -73,6 +73,8 @@ Energy independence also means less reliance on utility companies whose pricing 
 ## Conclusion
 
 Solar energy has crossed the threshold from niche technology to mainstream home improvement. The combination of falling installation costs, generous tax incentives, rising electricity rates, and maturing battery storage options means the math works for more homeowners than ever before. Whether you're primarily motivated by cutting your bills, shrinking your carbon footprint, or simply gaining more control over your home's energy future, solar delivers on all three fronts. The best time to go solar was five years ago; the second best time is today.
+
+Homes with solar installations can also see increased resale value, as buyers often prefer properties with lower long-term utility costs. Real estate studies in multiple U.S. markets have found that homes equipped with solar panels frequently sell faster than comparable homes without them. Maintenance requirements are generally minimal since most systems have no moving parts and only require occasional cleaning and inverter replacement over time. As solar technology continues to improve and installation costs keep falling, rooftop solar is likely to become an increasingly standard feature of modern homes.
 """
 
 BAD_WRITING_DELIVERABLE = """
