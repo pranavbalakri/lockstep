@@ -14,7 +14,8 @@
       "Bash(node -e \":*)",
       "Bash(npx tsc:*)",
       "Bash(npx next:*)",
-      "Bash(python -c \"import ast, sys; files = [''models.py'',''config.py'',''pipeline.py'',''routes.py'',''main.py'',''agents/__init__.py'',''agents/scope_parser.py'',''agents/deliverable_analyzer.py'',''agents/verdict_agent.py'',''agents/mediator.py'',''test_agents.py'']; [ast.parse\\(open\\(f\\).read\\(\\)\\) or print\\(f''OK: {f}''\\) for f in files]; print\\(''All files parse cleanly.''\\)\")"
+      "Bash(python -c \"import ast, sys; files = [''models.py'',''config.py'',''pipeline.py'',''routes.py'',''main.py'',''agents/__init__.py'',''agents/scope_parser.py'',''agents/deliverable_analyzer.py'',''agents/verdict_agent.py'',''agents/mediator.py'',''test_agents.py'']; [ast.parse\\(open\\(f\\).read\\(\\)\\) or print\\(f''OK: {f}''\\) for f in files]; print\\(''All files parse cleanly.''\\)\")",
+      "Bash(git push:*)"
     ],
     "additionalDirectories": [
       "/Users/pranavbalakri/lockstep/app/api/gigs/[id]",

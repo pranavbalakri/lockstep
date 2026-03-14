@@ -1,22 +1,6 @@
 {
   "app": {
-    "[project]/app/gigs/page": [
-      "static/media/03bda585a99c6450-s.p.ad37b9d9.woff2",
-      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2"
-    ],
-    "[project]/app/login/page": [
-      "static/media/03bda585a99c6450-s.p.ad37b9d9.woff2",
-      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2"
-    ],
     "[project]/app/page": [
-      "static/media/03bda585a99c6450-s.p.ad37b9d9.woff2",
-      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2"
-    ],
-    "[project]/app/post/page": [
-      "static/media/03bda585a99c6450-s.p.ad37b9d9.woff2",
-      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2"
-    ],
-    "[project]/app/signup/page": [
       "static/media/03bda585a99c6450-s.p.ad37b9d9.woff2",
       "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2"
     ]

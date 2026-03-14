@@ -74,8 +74,8 @@ const config = {
     "previewFeatures": [],
     "clientVersion": "7.5.0",
     "engineVersion": "280c870be64f457428992c43c1f6d557fab6e29e",
-    "activeProvider": "sqlite",
-    "inlineSchema": "generator client {\n  provider = \"prisma-client\"\n  output   = \"../lib/generated/prisma\"\n}\n\ndatasource db {\n  provider = \"sqlite\"\n}\n\nmodel User {\n  id        String   @id @default(cuid())\n  name      String\n  email     String   @unique\n  password  String\n  role      String   @default(\"freelancer\")\n  createdAt DateTime @default(now())\n\n  gigs        Gig[]        @relation(\"ClientGigs\")\n  requests    Request[]    @relation(\"FreelancerRequests\")\n  submissions Submission[] @relation(\"FreelancerSubmissions\")\n}\n\nmodel Gig {\n  id           String   @id @default(cuid())\n  clientId     String\n  title        String\n  category     String\n  description  String\n  budget       Float\n  deadline     DateTime\n  skills       String   @default(\"[]\")\n  deliverables String\n  status       String   @default(\"open\")\n  createdAt    DateTime @default(now())\n\n  client     User        @relation(\"ClientGigs\", fields: [clientId], references: [id])\n  requests   Request[]\n  submission Submission?\n}\n\nmodel Request {\n  id               String   @id @default(cuid())\n  gigId            String\n  freelancerId     String\n  proposal         String\n  proposedTimeline String\n  status           String   @default(\"pending\")\n  createdAt        DateTime @default(now())\n\n  gig        Gig  @relation(fields: [gigId], references: [id])\n  freelancer User @relation(\"FreelancerRequests\", fields: [freelancerId], references: [id])\n}\n\nmodel Submission {\n  id           String   @id @default(cuid())\n  gigId        String   @unique\n  freelancerId String\n  textContent  String?\n  url          String?\n  filePaths    String   @default(\"[]\")\n  notes        String?\n  createdAt    DateTime @default(now())\n\n  gig        Gig  @relation(fields: [gigId], references: [id])\n  freelancer User @relation(\"FreelancerSubmissions\", fields: [freelancerId], references: [id])\n}\n",
+    "activeProvider": "postgresql",
+    "inlineSchema": "generator client {\n  provider = \"prisma-client\"\n  output   = \"../lib/generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n}\n\nmodel User {\n  id        String   @id @default(cuid())\n  name      String\n  email     String   @unique\n  password  String\n  role      String   @default(\"freelancer\")\n  createdAt DateTime @default(now())\n\n  gigs        Gig[]        @relation(\"ClientGigs\")\n  requests    Request[]    @relation(\"FreelancerRequests\")\n  submissions Submission[] @relation(\"FreelancerSubmissions\")\n}\n\nmodel Gig {\n  id           String   @id @default(cuid())\n  clientId     String\n  title        String\n  category     String\n  description  String\n  budget       Float\n  deadline     DateTime\n  skills       String   @default(\"[]\")\n  deliverables String\n  status       String   @default(\"open\")\n  createdAt    DateTime @default(now())\n\n  client     User        @relation(\"ClientGigs\", fields: [clientId], references: [id])\n  requests   Request[]\n  submission Submission?\n}\n\nmodel Request {\n  id               String   @id @default(cuid())\n  gigId            String\n  freelancerId     String\n  proposal         String\n  proposedTimeline String\n  status           String   @default(\"pending\")\n  createdAt        DateTime @default(now())\n\n  gig        Gig  @relation(fields: [gigId], references: [id])\n  freelancer User @relation(\"FreelancerRequests\", fields: [freelancerId], references: [id])\n}\n\nmodel Submission {\n  id           String   @id @default(cuid())\n  gigId        String   @unique\n  freelancerId String\n  textContent  String?\n  url          String?\n  filePaths    String   @default(\"[]\")\n  notes        String?\n  createdAt    DateTime @default(now())\n\n  gig        Gig  @relation(fields: [gigId], references: [id])\n  freelancer User @relation(\"FreelancerSubmissions\", fields: [freelancerId], references: [id])\n}\n",
     "runtimeDataModel": {
         "models": {},
         "enums": {},
@@ -97,9 +97,9 @@ async function decodeBase64AsWasm(wasmBase64) {
     return new WebAssembly.Module(wasmArray);
 }
 config.compilerWasm = {
-    getRuntime: async ()=>await __turbopack_context__.A("[externals]/@prisma/client/runtime/query_compiler_fast_bg.sqlite.mjs [external] (@prisma/client/runtime/query_compiler_fast_bg.sqlite.mjs, esm_import, [project]/node_modules/@prisma/client, async loader)"),
+    getRuntime: async ()=>await __turbopack_context__.A("[externals]/@prisma/client/runtime/query_compiler_fast_bg.postgresql.mjs [external] (@prisma/client/runtime/query_compiler_fast_bg.postgresql.mjs, esm_import, [project]/node_modules/@prisma/client, async loader)"),
     getQueryCompilerWasmModule: async ()=>{
-        const { wasm } = await __turbopack_context__.A("[externals]/@prisma/client/runtime/query_compiler_fast_bg.sqlite.wasm-base64.mjs [external] (@prisma/client/runtime/query_compiler_fast_bg.sqlite.wasm-base64.mjs, esm_import, [project]/node_modules/@prisma/client, async loader)");
+        const { wasm } = await __turbopack_context__.A("[externals]/@prisma/client/runtime/query_compiler_fast_bg.postgresql.wasm-base64.mjs [external] (@prisma/client/runtime/query_compiler_fast_bg.postgresql.wasm-base64.mjs, esm_import, [project]/node_modules/@prisma/client, async loader)");
         return await decodeBase64AsWasm(wasm);
     },
     importName: "./query_compiler_fast_bg.js"
@@ -138,6 +138,8 @@ __turbopack_context__.s([
     ()=>PrismaClientUnknownRequestError,
     "PrismaClientValidationError",
     ()=>PrismaClientValidationError,
+    "QueryMode",
+    ()=>QueryMode,
     "RequestScalarFieldEnum",
     ()=>RequestScalarFieldEnum,
     "SortOrder",
@@ -210,6 +212,9 @@ const ModelName = {
     Submission: 'Submission'
 };
 const TransactionIsolationLevel = __TURBOPACK__imported__module__$5b$externals$5d2f40$prisma$2f$client$2f$runtime$2f$client__$5b$external$5d$__$2840$prisma$2f$client$2f$runtime$2f$client$2c$__cjs$2c$__$5b$project$5d2f$node_modules$2f40$prisma$2f$client$29$__["makeStrictEnum"]({
+    ReadUncommitted: 'ReadUncommitted',
+    ReadCommitted: 'ReadCommitted',
+    RepeatableRead: 'RepeatableRead',
     Serializable: 'Serializable'
 });
 const UserScalarFieldEnum = {
@@ -255,6 +260,10 @@ const SubmissionScalarFieldEnum = {
 const SortOrder = {
     asc: 'asc',
     desc: 'desc'
+};
+const QueryMode = {
+    default: 'default',
+    insensitive: 'insensitive'
 };
 const NullsOrder = {
     first: 'first',
@@ -312,16 +321,33 @@ const PrismaClient = __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$gene
 "[project]/lib/db.ts [app-route] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
+return __turbopack_context__.a(async (__turbopack_handle_async_dependencies__, __turbopack_async_result__) => { try {
+
 __turbopack_context__.s([
     "prisma",
     ()=>prisma
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$generated$2f$prisma$2f$client$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/lib/generated/prisma/client.ts [app-route] (ecmascript) <locals>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$prisma$2f$adapter$2d$pg$2f$dist$2f$index$2e$mjs__$5b$app$2d$route$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/@prisma/adapter-pg/dist/index.mjs [app-route] (ecmascript)");
+var __turbopack_async_dependencies__ = __turbopack_handle_async_dependencies__([
+    __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$prisma$2f$adapter$2d$pg$2f$dist$2f$index$2e$mjs__$5b$app$2d$route$5d$__$28$ecmascript$29$__
+]);
+[__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$prisma$2f$adapter$2d$pg$2f$dist$2f$index$2e$mjs__$5b$app$2d$route$5d$__$28$ecmascript$29$__] = __turbopack_async_dependencies__.then ? (await __turbopack_async_dependencies__)() : __turbopack_async_dependencies__;
 ;
+;
+function createPrisma() {
+    const adapter = new __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$prisma$2f$adapter$2d$pg$2f$dist$2f$index$2e$mjs__$5b$app$2d$route$5d$__$28$ecmascript$29$__["PrismaPg"]({
+        connectionString: process.env.DATABASE_URL
+    });
+    return new __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$generated$2f$prisma$2f$client$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__$3c$locals$3e$__["PrismaClient"]({
+        adapter
+    });
+}
 const globalForPrisma = globalThis;
-const prisma = globalForPrisma.prisma ?? new __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$generated$2f$prisma$2f$client$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__$3c$locals$3e$__["PrismaClient"]();
+const prisma = globalForPrisma.prisma ?? createPrisma();
 if ("TURBOPACK compile-time truthy", 1) globalForPrisma.prisma = prisma;
-}),
+__turbopack_async_result__();
+} catch(e) { __turbopack_async_result__(e); } }, false);}),
 "[project]/lib/auth.ts [app-route] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
@@ -384,6 +410,8 @@ function setCookieOptions() {
 "[project]/app/api/gigs/route.ts [app-route] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
+return __turbopack_context__.a(async (__turbopack_handle_async_dependencies__, __turbopack_async_result__) => { try {
+
 __turbopack_context__.s([
     "GET",
     ()=>GET,
@@ -393,6 +421,10 @@ __turbopack_context__.s([
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/server.js [app-route] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/db.ts [app-route] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$auth$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/auth.ts [app-route] (ecmascript)");
+var __turbopack_async_dependencies__ = __turbopack_handle_async_dependencies__([
+    __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__
+]);
+[__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__] = __turbopack_async_dependencies__.then ? (await __turbopack_async_dependencies__)() : __turbopack_async_dependencies__;
 ;
 ;
 ;
@@ -509,7 +541,8 @@ async function POST(req) {
         });
     }
 }
-}),
+__turbopack_async_result__();
+} catch(e) { __turbopack_async_result__(e); } }, false);}),
 ];
 
 //# sourceMappingURL=%5Broot-of-the-server%5D__d3a3821f._.js.map
