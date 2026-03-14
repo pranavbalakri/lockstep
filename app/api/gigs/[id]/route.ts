@@ -8,7 +8,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     where: { id },
     include: {
       freelancer: { select: { id: true, name: true, walletAddress: true } },
-      requests: { select: { id: true, clientId: true, status: true } },
+      requests: { select: { id: true, clientId: true, status: true, contractAddress: true, ethAmount: true } },
       submission: true,
     },
   })

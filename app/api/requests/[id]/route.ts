@@ -71,7 +71,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       where: { gigId: request.gigId, id: { not: id } },
       data: { status: "rejected" },
     })
-    await prisma.gig.update({ where: { id: request.gigId }, data: { status: "in_progress" } })
+    await prisma.gig.update({
+      where: { id: request.gigId },
+      data: {
+        status: "in_progress",
+        ...(request.contractAddress && { contractAddress: request.contractAddress }),
+      },
+    })
   } else {
     await prisma.request.update({ where: { id }, data: { status: "rejected" } })
   }

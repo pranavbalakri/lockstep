@@ -47,6 +47,8 @@ model Request {
   proposal         String
   proposedTimeline String
   status           String   @default("pending")
+  contractAddress  String?
+  ethAmount        Float?
   createdAt        DateTime @default(now())
 
   gig    Gig  @relation(fields: [gigId], references: [id])

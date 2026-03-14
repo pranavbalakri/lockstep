@@ -35,7 +35,7 @@ interface GigData {
   createdAt: string
   requestCount: number
   freelancer: { id: string; name: string; walletAddress?: string }
-  requests: { id: string; clientId: string; status: string }[]
+  requests: { id: string; clientId: string; status: string; contractAddress?: string; ethAmount?: number }[]
   submission?: {
     textContent?: string
     url?: string
@@ -71,9 +71,12 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
   const [showRequestForm, setShowRequestForm] = useState(false)
   const [proposal, setProposal] = useState("")
   const [timeline, setTimeline] = useState("")
+  const [requestEthAmount, setRequestEthAmount] = useState("")
   const [submitting, setSubmitting] = useState(false)
+  const [submitStep, setSubmitStep] = useState("")
   const [requestError, setRequestError] = useState("")
   const [hasRequested, setHasRequested] = useState(false)
+  const [deployedContract, setDeployedContract] = useState<{ address: string; ethAmount: string } | null>(null)
   const [reviewLoading, setReviewLoading] = useState(false)
   const [reviewError, setReviewError] = useState("")
   const [fundLoading, setFundLoading] = useState(false)
@@ -105,20 +108,69 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
     setRequestError("")
     if (!user) { router.push(`/login?redirect=/gig/${id}`); return }
     setSubmitting(true)
+
+    let contractAddress: string | undefined
+    let ethAmountValue: string | undefined
+
+    if (requestEthAmount && parseFloat(requestEthAmount) > 0) {
+      try {
+        const freelancerWalletAddress = gig?.freelancer.walletAddress
+        if (!freelancerWalletAddress) throw new Error("Freelancer has no wallet address on file")
+
+        setSubmitStep("Connecting wallet…")
+        const { walletClient, publicClient, account } = await getWalletClients()
+
+        setSubmitStep("Deploying escrow contract…")
+        const deployHash = await walletClient.deployContract({
+          abi: DEADDROP_ABI,
+          bytecode: DEADDROP_BYTECODE,
+          args: [account, freelancerWalletAddress as `0x${string}`],
+        })
+        const receipt = await publicClient.waitForTransactionReceipt({ hash: deployHash })
+        if (!receipt.contractAddress) throw new Error("Deploy failed: no contract address in receipt")
+        contractAddress = receipt.contractAddress
+
+        setSubmitStep("Depositing ETH…")
+        await walletClient.writeContract({
+          address: contractAddress as `0x${string}`,
+          abi: DEADDROP_ABI,
+          functionName: "deposit",
+          value: parseEther(requestEthAmount),
+        })
+        ethAmountValue = requestEthAmount
+      } catch (e: unknown) {
+        const err = e as { shortMessage?: string; message?: string }
+        setRequestError(err.shortMessage ?? err.message ?? "Contract deployment failed")
+        setSubmitting(false)
+        setSubmitStep("")
+        return
+      }
+    }
+
+    setSubmitStep("Saving request…")
     const res = await fetch(`/api/gigs/${id}/requests`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ proposal, proposedTimeline: timeline }),
+      body: JSON.stringify({
+        proposal,
+        proposedTimeline: timeline,
+        ...(contractAddress && { contractAddress }),
+        ...(ethAmountValue && { ethAmount: parseFloat(ethAmountValue) }),
+      }),
     })
     const data = await res.json()
     if (res.ok) {
       setHasRequested(true)
       setShowRequestForm(false)
+      if (contractAddress && ethAmountValue) {
+        setDeployedContract({ address: contractAddress, ethAmount: ethAmountValue })
+      }
       if (gig) setGig({ ...gig, requestCount: gig.requestCount + 1 })
     } else {
       setRequestError(data.error ?? "Failed to submit")
     }
     setSubmitting(false)
+    setSubmitStep("")
   }
 
   async function fundEscrow(e: React.FormEvent) {
@@ -330,19 +382,56 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
                       className="h-10 rounded-lg border bg-background px-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary"
                     />
                   </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-foreground">Escrow deposit (ETH)</label>
+                    <input
+                      value={requestEthAmount}
+                      onChange={(e) => setRequestEthAmount(e.target.value)}
+                      placeholder="0.05 — deploy & fund escrow now"
+                      type="number"
+                      min="0"
+                      step="any"
+                      className="h-10 rounded-lg border bg-background px-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary"
+                    />
+                    <p className="text-xs text-muted-foreground">Optional. If provided, an escrow contract is deployed and funded when you submit.</p>
+                  </div>
                   {requestError && (
                     <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{requestError}</p>
                   )}
                   <div className="flex items-center gap-3">
                     <Button type="submit" className="rounded-full px-6" disabled={submitting}>
-                      {submitting ? "Submitting…" : "Submit Request"}
+                      {submitting ? (submitStep || "Submitting…") : "Submit Request"}
                     </Button>
-                    <Button type="button" variant="ghost" className="rounded-full" onClick={() => setShowRequestForm(false)}>
+                    <Button type="button" variant="ghost" className="rounded-full" onClick={() => setShowRequestForm(false)} disabled={submitting}>
                       Cancel
                     </Button>
                   </div>
                 </form>
               </section>
+            )}
+
+            {/* Contract deployed at request time — just submitted */}
+            {deployedContract && (
+              <div className="mb-8 rounded-xl border border-green-200 bg-green-50 p-4">
+                <p className="text-sm font-medium text-green-800">Escrow contract deployed</p>
+                <p className="mt-0.5 font-mono text-xs text-green-700 break-all">{deployedContract.address}</p>
+                <p className="mt-2 text-sm text-green-800">
+                  Amount locked: <span className="font-semibold">{deployedContract.ethAmount} ETH</span>
+                </p>
+              </div>
+            )}
+
+            {/* Contract from DB — returning client view */}
+            {isClient && !deployedContract && myRequest?.contractAddress && (
+              <div className="mb-8 rounded-xl border border-green-200 bg-green-50 p-4">
+                <p className="text-sm font-medium text-green-800">Escrow contract deployed</p>
+                <p className="mt-0.5 font-mono text-xs text-green-700 break-all">{myRequest.contractAddress}</p>
+                {myRequest.ethAmount != null && (
+                  <p className="mt-2 text-sm text-green-800">
+                    Amount locked: <span className="font-semibold">{myRequest.ethAmount} ETH</span>
+                  </p>
+                )}
+              </div>
             )}
 
             {/* Fund Escrow (client, in_progress, no contract yet) */}

@@ -37,13 +37,20 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const existing = await prisma.request.findFirst({ where: { gigId: id, clientId: session.id } })
   if (existing) return NextResponse.json({ error: "Already requested" }, { status: 409 })
 
-  const { proposal, proposedTimeline } = await req.json()
+  const { proposal, proposedTimeline, contractAddress, ethAmount } = await req.json()
   if (!proposal || !proposedTimeline) {
     return NextResponse.json({ error: "Proposal and timeline required" }, { status: 400 })
   }
 
   const request = await prisma.request.create({
-    data: { gigId: id, clientId: session.id, proposal, proposedTimeline },
+    data: {
+      gigId: id,
+      clientId: session.id,
+      proposal,
+      proposedTimeline,
+      ...(contractAddress && { contractAddress }),
+      ...(ethAmount !== undefined && ethAmount !== null && { ethAmount: parseFloat(ethAmount) }),
+    },
   })
 
   return NextResponse.json({ request }, { status: 201 })
