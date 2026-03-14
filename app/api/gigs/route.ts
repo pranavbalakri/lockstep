@@ -11,9 +11,11 @@ export async function GET(req: NextRequest) {
   const minBudget = searchParams.get("minBudget")
   const maxBudget = searchParams.get("maxBudget")
   const skill = searchParams.get("skill")
+  const q = searchParams.get("q")
 
   const where: Record<string, unknown> = {}
   if (category && category !== "All") where.category = category
+  if (q) where.title = { contains: q, mode: "insensitive" }
 
   if (minBudget || maxBudget) {
     where.budget = {

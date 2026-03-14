@@ -27,7 +27,11 @@
       "Bash(npx solc:*)",
       "Bash(ls *.abi *.bin)",
       "Bash(ls /Users/pranavbalakri/lockstep/app/api/gigs/[id]/)",
-      "Bash(grep \"createPublicClient\" /Users/pranavbalakri/lockstep/app/gig/[id]/page.tsx)"
+      "Bash(grep \"createPublicClient\" /Users/pranavbalakri/lockstep/app/gig/[id]/page.tsx)",
+      "Bash(diff /Users/pranavbalakri/lockstep/components/header.tsx:*)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(diff /Users/pranavbalakri/lockstep/components/hero-section.tsx:*)",
+      "Bash(diff /Users/pranavbalakri/lockstep/components/roles-section.tsx:*)"
     ],
     "additionalDirectories": [
       "/Users/pranavbalakri/lockstep/app/api/gigs/[id]",

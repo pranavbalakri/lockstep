@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Menu, X, ChevronDown } from "lucide-react"
+import { Menu, X, ChevronDown, Smile } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { getInitials, getAvatarColor } from "@/lib/avatar"
@@ -51,22 +51,22 @@ export function Header() {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         {/* Logo */}
         <Link href="/" className="flex items-center">
-          <span className="font-serif text-3xl font-semibold text-primary">L</span>
+          <span className="flex items-center gap-1.5 text-2xl font-semibold tracking-tight text-primary">
+            Gi<span className="text-foreground">gg</span>le
+            <Smile className="h-5 w-5 text-primary" strokeWidth={2.5} />
+          </span>
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden items-center gap-10 md:flex">
-          <Link href="/roles" className="text-sm text-foreground transition-colors hover:text-foreground/70">
-            Roles
+        <nav className="hidden items-center gap-8 md:flex">
+          <Link href="/gigs" className="text-sm text-foreground transition-colors hover:text-foreground/70">
+            Find Work
           </Link>
-          <Link href="/research" className="text-sm text-foreground transition-colors hover:text-foreground/70">
-            Research
+          <Link href="/post" className="text-sm text-foreground transition-colors hover:text-foreground/70">
+            Post a Job
           </Link>
-          <Link href="/enterprise" className="text-sm text-foreground transition-colors hover:text-foreground/70">
-            Enterprise
-          </Link>
-          <Link href="/blog" className="text-sm text-foreground transition-colors hover:text-foreground/70">
-            Blog
+          <Link href="/dashboard" className="text-sm text-foreground transition-colors hover:text-foreground/70">
+            Dashboard
           </Link>
         </nav>
 
@@ -128,17 +128,14 @@ export function Header() {
       {mobileMenuOpen && (
         <div className="border-t bg-background px-6 py-4 md:hidden">
           <nav className="flex flex-col gap-4">
-            <Link href="/roles" className="text-sm text-foreground" onClick={() => setMobileMenuOpen(false)}>
-              Roles
+            <Link href="/gigs" className="text-sm text-foreground" onClick={() => setMobileMenuOpen(false)}>
+              Find Work
             </Link>
-            <Link href="/research" className="text-sm text-foreground" onClick={() => setMobileMenuOpen(false)}>
-              Research
+            <Link href="/post" className="text-sm text-foreground" onClick={() => setMobileMenuOpen(false)}>
+              Post a Job
             </Link>
-            <Link href="/enterprise" className="text-sm text-foreground" onClick={() => setMobileMenuOpen(false)}>
-              Enterprise
-            </Link>
-            <Link href="/blog" className="text-sm text-foreground" onClick={() => setMobileMenuOpen(false)}>
-              Blog
+            <Link href="/dashboard" className="text-sm text-foreground" onClick={() => setMobileMenuOpen(false)}>
+              Dashboard
             </Link>
             <div className="border-t pt-4">
               {user ? (
