@@ -1,0 +1,13 @@
+{
+  "name": "deaddrop",
+  "private": true,
+  "packageManager": "pnpm@10.6.5",
+  "workspaces": [
+    "web"
+  ],
+  "scripts": {
+    "dev": "pnpm --dir web dev",
+    "build": "pnpm --dir web build",
+    "lint": "pnpm --dir web lint"
+  }
+}

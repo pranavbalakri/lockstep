@@ -1,0 +1,3 @@
+[submodule "deaddrop/contracts/lib/forge-std"]
+	path = deaddrop/contracts/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std

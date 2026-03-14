@@ -1,0 +1,14 @@
+.env
+.env.local
+.env.*.local
+.DS_Store
+*.swp
+node_modules
+.next
+out
+dist
+broadcast
+cache
+coverage
+lib
+artifacts
