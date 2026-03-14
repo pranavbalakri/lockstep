@@ -1,18 +1,8 @@
 import "dotenv/config"
 import { PrismaClient } from "../lib/generated/prisma/client"
-import { PrismaLibSql } from "@prisma/adapter-libsql"
-import path from "path"
 import bcrypt from "bcryptjs"
 
-const rawUrl = process.env.DATABASE_URL ?? "file:./prisma/dev.db"
-let dbUrl = rawUrl
-if (dbUrl.startsWith("file:./")) {
-  dbUrl = `file://${path.resolve(dbUrl.slice(7))}`
-} else if (dbUrl.startsWith("file:") && !dbUrl.startsWith("file://")) {
-  dbUrl = `file://${path.resolve(dbUrl.slice(5))}`
-}
-const adapter = new PrismaLibSql({ url: dbUrl })
-const prisma = new PrismaClient({ adapter } as ConstructorParameters<typeof PrismaClient>[0])
+const prisma = new PrismaClient()
 
 async function main() {
   await prisma.submission.deleteMany()
