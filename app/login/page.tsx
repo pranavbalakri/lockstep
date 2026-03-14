@@ -82,7 +82,7 @@ export default function LoginPage() {
         <div className="w-full max-w-sm">
           <div className="mb-8 text-center">
             <h1 className="font-serif text-3xl font-normal text-foreground">Welcome back</h1>
-            <p className="mt-2 text-sm text-muted-foreground">Log in to your Lockstep account</p>
+            <p className="mt-2 text-sm text-muted-foreground">Log in to your Giggle account</p>
           </div>
           <Suspense fallback={<div className="h-48 animate-pulse rounded-xl border bg-card" />}>
             <LoginForm />

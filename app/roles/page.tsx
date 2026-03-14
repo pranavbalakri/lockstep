@@ -12,7 +12,7 @@ export default function RolesPage() {
             Built for both sides of the contract
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">
-            Whether you&apos;re looking for top-tier talent or your next project, Lockstep is designed to make every engagement trustless and fair.
+            Whether you&apos;re looking for top-tier talent or your next project, Giggle is designed to make every engagement trustless and fair.
           </p>
         </div>
 
@@ -24,7 +24,7 @@ export default function RolesPage() {
             </div>
             <h2 className="mt-4 font-serif text-2xl font-normal text-foreground">Get paid. No exceptions.</h2>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-              Stop worrying about clients disappearing after delivery. Lockstep holds funds in escrow before work begins — you submit, AI verifies, funds release.
+              Stop worrying about clients disappearing after delivery. Giggle holds funds in escrow before work begins — you submit, AI verifies, funds release.
             </p>
             <ul className="mt-6 flex flex-col gap-3">
               {[

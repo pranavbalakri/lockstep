@@ -3,10 +3,10 @@ import { cookies } from "next/headers"
 import { NextRequest } from "next/server"
 
 const SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET ?? "lockstep-dev-secret-change-in-production"
+  process.env.JWT_SECRET ?? "giggle-dev-secret-change-in-production"
 )
 
-const COOKIE_NAME = "lockstep_token"
+const COOKIE_NAME = "giggle_token"
 
 export interface SessionUser {
   id: string

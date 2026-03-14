@@ -1,21 +1,10 @@
 import type { Metadata } from 'next'
-import { Fraunces, Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
-const fraunces = Fraunces({ 
-  subsets: ["latin"],
-  variable: "--font-serif"
-});
-
-const inter = Inter({ 
-  subsets: ["latin"],
-  variable: "--font-sans"
-});
-
 export const metadata: Metadata = {
-  title: 'Lockstep | Freelance Marketplace',
-  description: 'Find top-tier, remote roles for your expertise. Available only on Lockstep.',
+  title: 'Giggle | Freelance Marketplace',
+  description: 'Find top-tier, remote roles for your expertise. Available only on Giggle.',
   generator: 'v0.app',
   icons: {
     icon: [
@@ -43,7 +32,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${fraunces.variable} ${inter.variable} font-sans antialiased`}>
+      <body className="font-sans antialiased">
         {children}
         <Analytics />
       </body>

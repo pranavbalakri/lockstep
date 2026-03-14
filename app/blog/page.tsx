@@ -18,7 +18,7 @@ const POSTS = [
     slug: "zero-platform-fees",
     title: "Zero Platform Fees: Sustainable Model or Marketing Stunt?",
     date: "February 5, 2026",
-    excerpt: "Fiverr takes 20%. Upwork takes 10–20%. Lockstep takes 0%. Here's how the economics work when escrow float replaces fee extraction as the business model.",
+    excerpt: "Fiverr takes 20%. Upwork takes 10–20%. Giggle takes 0%. Here's how the economics work when escrow float replaces fee extraction as the business model.",
   },
   {
     slug: "trustless-freelancing-future",

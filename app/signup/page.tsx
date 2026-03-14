@@ -54,7 +54,7 @@ export default function SignupPage() {
         <div className="w-full max-w-sm">
           <div className="mb-8 text-center">
             <h1 className="font-serif text-3xl font-normal text-foreground">Create account</h1>
-            <p className="mt-2 text-sm text-muted-foreground">Join Lockstep — trustless freelance payments</p>
+            <p className="mt-2 text-sm text-muted-foreground">Join Giggle — trustless freelance payments</p>
           </div>
 
           <div className="rounded-xl border bg-card p-6 shadow-sm">
