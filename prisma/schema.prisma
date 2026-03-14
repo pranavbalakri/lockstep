@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("freelancer")
+  createdAt DateTime @default(now())
+
+  gigs        Gig[]        @relation("ClientGigs")
+  requests    Request[]    @relation("FreelancerRequests")
+  submissions Submission[] @relation("FreelancerSubmissions")
+}
+
+model Gig {
+  id           String   @id @default(cuid())
+  clientId     String
+  title        String
+  category     String
+  description  String
+  budget       Float
+  deadline     DateTime
+  skills       String   @default("[]")
+  deliverables String
+  status       String   @default("open")
+  createdAt    DateTime @default(now())
+
+  client     User         @relation("ClientGigs", fields: [clientId], references: [id])
+  requests   Request[]
+  submission Submission?
+}
+
+model Request {
+  id               String   @id @default(cuid())
+  gigId            String
+  freelancerId     String
+  proposal         String
+  proposedTimeline String
+  status           String   @default("pending")
+  createdAt        DateTime @default(now())
+
+  gig        Gig  @relation(fields: [gigId], references: [id])
+  freelancer User @relation("FreelancerRequests", fields: [freelancerId], references: [id])
+}
+
+model Submission {
+  id           String   @id @default(cuid())
+  gigId        String   @unique
+  freelancerId String
+  textContent  String?
+  url          String?
+  filePaths    String   @default("[]")
+  notes        String?
+  createdAt    DateTime @default(now())
+
+  gig        Gig  @relation(fields: [gigId], references: [id])
+  freelancer User @relation("FreelancerSubmissions", fields: [freelancerId], references: [id])
+}

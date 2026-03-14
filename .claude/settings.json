@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx prisma:*)",
+      "Bash(npm install:*)",
+      "Bash(npx tsx:*)",
+      "Bash(node --import tsx/esm prisma/seed.ts)",
+      "Bash(node --import ./node_modules/tsx/dist/esm/index.js prisma/seed.ts)",
+      "Bash(node --import ./node_modules/tsx/dist/esm/index-7AaEi15b.mjs prisma/seed.ts)",
+      "Bash(./node_modules/.bin/tsx prisma/seed.ts)",
+      "Bash(npm ls:*)",
+      "Bash(node -e \"const m = require\\(''@prisma/adapter-libsql''\\); console.log\\(Object.keys\\(m\\)\\)\")",
+      "Bash(node -e \"const { PrismaLibSql } = require\\(''@prisma/adapter-libsql''\\); console.log\\(typeof PrismaLibSql, PrismaLibSql.toString\\(\\).slice\\(0, 200\\)\\)\")",
+      "Bash(node -e \":*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx next:*)"
+    ],
+    "additionalDirectories": [
+      "/Users/pranavbalakri/lockstep/app/api/gigs/[id]",
+      "/Users/pranavbalakri/lockstep/app/gig"
+    ]
+  }
+}
