@@ -7,7 +7,7 @@ import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { formatDistanceToNow, format } from "date-fns"
 
-interface SessionUser { id: string; name: string; email: string; role: string }
+interface SessionUser { id: string; name: string; email: string; role: string; walletAddress?: string }
 interface Gig { id: string; title: string; budget: number; status: string; requestCount: number; createdAt: string; deadline: string }
 interface Request {
   id: string
@@ -36,6 +36,9 @@ export default function DashboardPage() {
   const [gigs, setGigs] = useState<Gig[]>([])
   const [requests, setRequests] = useState<Request[]>([])
   const [loading, setLoading] = useState(true)
+  const [walletInput, setWalletInput] = useState("")
+  const [walletSaving, setWalletSaving] = useState(false)
+  const [walletMsg, setWalletMsg] = useState("")
   const router = useRouter()
 
   const loadData = useCallback(async (u: SessionUser) => {
@@ -66,6 +69,27 @@ export default function DashboardPage() {
         loadData(d.user)
       })
   }, [router, loadData])
+
+  async function saveWallet() {
+    if (!/^0x[0-9a-fA-F]{40}$/.test(walletInput)) {
+      setWalletMsg("Invalid address format")
+      return
+    }
+    setWalletSaving(true)
+    const res = await fetch("/api/auth/me", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ walletAddress: walletInput }),
+    })
+    if (res.ok) {
+      setUser((u) => u ? { ...u, walletAddress: walletInput } : u)
+      setWalletMsg("Saved!")
+      setWalletInput("")
+    } else {
+      setWalletMsg("Failed to save")
+    }
+    setWalletSaving(false)
+  }
 
   async function handleRequestAction(requestId: string, action: "accept" | "reject") {
     await fetch(`/api/requests/${requestId}`, {
@@ -99,6 +123,30 @@ export default function DashboardPage() {
           <p className="mt-1 text-sm text-muted-foreground">
             Welcome back, {user.name} · <span className="capitalize">{user.role}</span>
           </p>
+        </div>
+
+        {/* Wallet address banner */}
+        <div className="mb-8 rounded-xl border bg-card p-4">
+          <p className="mb-2 text-sm font-medium text-foreground">Ethereum wallet address</p>
+          {user.walletAddress ? (
+            <p className="font-mono text-sm text-muted-foreground break-all">{user.walletAddress}</p>
+          ) : (
+            <div className="flex items-center gap-2">
+              <input
+                value={walletInput}
+                onChange={(e) => { setWalletInput(e.target.value); setWalletMsg("") }}
+                placeholder="0x..."
+                className="h-9 flex-1 rounded-lg border bg-background px-3 font-mono text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary"
+              />
+              <Button size="sm" className="rounded-full" onClick={saveWallet} disabled={walletSaving}>
+                {walletSaving ? "Saving…" : "Save"}
+              </Button>
+              {walletMsg && <span className="text-xs text-muted-foreground">{walletMsg}</span>}
+            </div>
+          )}
+          {!user.walletAddress && (
+            <p className="mt-1.5 text-xs text-muted-foreground">Required to use ETH escrow on paid gigs.</p>
+          )}
         </div>
 
         {user.role === "client" ? (
