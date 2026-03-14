@@ -1,3 +1,11 @@
 {
-  "/page": "app/page.js"
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/auth/me/route": "app/api/auth/me/route.js",
+  "/api/gigs/[id]/route": "app/api/gigs/[id]/route.js",
+  "/api/gigs/route": "app/api/gigs/route.js",
+  "/gig/[id]/page": "app/gig/[id]/page.js",
+  "/gigs/page": "app/gigs/page.js",
+  "/login/page": "app/login/page.js",
+  "/page": "app/page.js",
+  "/post/page": "app/post/page.js"
 }

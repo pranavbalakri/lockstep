@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
 export function HeroSection() {
@@ -36,11 +37,11 @@ export function HeroSection() {
 
         {/* CTAs */}
         <div className="flex items-center justify-center gap-3">
-          <Button size="lg" className="rounded-full px-7">
-            Find work
+          <Button asChild size="lg" className="rounded-full px-7">
+            <Link href="/gigs">Find work</Link>
           </Button>
-          <Button variant="outline" size="lg" className="rounded-full px-7">
-            Post a job
+          <Button asChild variant="outline" size="lg" className="rounded-full px-7">
+            <Link href="/post">Post a job</Link>
           </Button>
         </div>
       </div>
