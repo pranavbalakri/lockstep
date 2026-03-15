@@ -11,20 +11,73 @@ interface GigData {
   title: string
   deliverables: string
   status: string
-  requests: { freelancerId: string; status: string }[]
+  ethAmount?: number | null
+  contractAddress?: string | null
+  requests: { status: string; ethAmount?: number | null }[]
+}
+
+interface ReviewResult {
+  verdict: string
+  passed: number
+  failed: number
+  total: number
+  summary: string
+  remediation: string | null
+}
+
+const REVIEW_STEPS = [
+  { label: "Parsing gig scope", sub: "Extracting criteria from your deliverables" },
+  { label: "Analyzing submission", sub: "Evaluating work against criteria" },
+  { label: "Generating verdict", sub: "Deciding release or dispute" },
+]
+
+function AIReviewSteps({ step }: { step: number }) {
+  return (
+    <div className="rounded-xl border bg-secondary/30 p-5">
+      <p className="mb-4 text-sm font-medium text-foreground">AI is reviewing your submission…</p>
+      <div className="flex flex-col gap-3">
+        {REVIEW_STEPS.map((s, i) => {
+          const idx = i + 1
+          const done = step > idx
+          const active = step === idx
+          return (
+            <div key={s.label} className="flex items-start gap-3">
+              <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                done ? "border-primary bg-primary" :
+                active ? "border-primary bg-background" :
+                "border-border bg-background"
+              }`}>
+                {done ? (
+                  <svg className="h-2.5 w-2.5 text-primary-foreground" fill="none" viewBox="0 0 10 10">
+                    <path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                ) : active ? (
+                  <div className="h-2 w-2 animate-pulse rounded-full bg-primary" />
+                ) : null}
+              </div>
+              <div className={`transition-opacity ${active || done ? "opacity-100" : "opacity-40"}`}>
+                <p className={`text-sm ${active ? "font-medium text-foreground" : "text-muted-foreground"}`}>{s.label}</p>
+                {active && <p className="text-xs text-muted-foreground">{s.sub}</p>}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
 }
 
 export default function SubmitPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const [gig, setGig] = useState<GigData | null>(null)
-  const [user, setUser] = useState<{ id: string; role: string } | null>(null)
   const [loading, setLoading] = useState(true)
   const [textContent, setTextContent] = useState("")
   const [url, setUrl] = useState("")
   const [notes, setNotes] = useState("")
   const [error, setError] = useState("")
   const [submitting, setSubmitting] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
+  const [reviewStep, setReviewStep] = useState(0)
+  const [review, setReview] = useState<ReviewResult | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -34,7 +87,6 @@ export default function SubmitPage({ params }: { params: Promise<{ id: string }>
     ]).then(([gigData, meData]) => {
       if (!meData?.user) { router.push(`/login?redirect=/gig/${id}/submit`); return }
       if (meData.user.role !== "freelancer") { router.push(`/gig/${id}`); return }
-      setUser(meData.user)
 
       if (!gigData?.gig) { router.push("/gigs"); return }
       if (gigData.gig.freelancer?.id !== meData.user.id || gigData.gig.status !== "in_progress") {
@@ -54,18 +106,24 @@ export default function SubmitPage({ params }: { params: Promise<{ id: string }>
       return
     }
     setSubmitting(true)
+    setReviewStep(1)
+    const t1 = setTimeout(() => setReviewStep(2), 7000)
+    const t2 = setTimeout(() => setReviewStep(3), 16000)
+
     const res = await fetch(`/api/gigs/${id}/submit`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ textContent: textContent || null, url: url || null, notes: notes || null }),
     })
+    clearTimeout(t1); clearTimeout(t2)
     const data = await res.json()
     if (res.ok) {
-      setSubmitted(true)
+      setReview(data.review)
     } else {
       setError(data.error ?? "Submission failed")
     }
     setSubmitting(false)
+    setReviewStep(0)
   }
 
   if (loading) {
@@ -81,23 +139,75 @@ export default function SubmitPage({ params }: { params: Promise<{ id: string }>
 
   if (!gig) return null
 
-  if (submitted) {
+  const escrowFunded = !gig.ethAmount || !!gig.requests.find(r => r.status === "accepted" && !!r.ethAmount)
+
+  if (!escrowFunded) {
     return (
       <main className="min-h-screen bg-background">
         <Header />
-        <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-6">
-          <div className="max-w-md text-center">
-            <div className="mb-4 text-4xl">✓</div>
-            <h1 className="font-serif text-2xl font-normal text-foreground">Deliverable submitted</h1>
-            <p className="mt-3 text-sm text-muted-foreground">Awaiting AI review before payment can be released.</p>
-            <div className="mt-6 flex items-center justify-center gap-3">
-              <Button asChild className="rounded-full px-6">
-                <Link href="/dashboard">Dashboard</Link>
-              </Button>
-              <Button asChild variant="outline" className="rounded-full px-6">
-                <Link href={`/gig/${id}`}>View gig</Link>
-              </Button>
+        <div className="mx-auto max-w-2xl px-6 py-12">
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-6">
+            <h2 className="font-serif text-lg font-medium text-foreground">Waiting for escrow deposit</h2>
+            <p className="mt-2 text-sm text-amber-800">
+              The client must deposit <span className="font-semibold">Ξ {gig.ethAmount} ETH</span> into the escrow contract before you can submit your deliverable.
+            </p>
+            <Button asChild variant="outline" className="mt-4 rounded-full px-5" size="sm">
+              <Link href={`/gig/${id}`}>Back to gig</Link>
+            </Button>
+          </div>
+        </div>
+      </main>
+    )
+  }
+
+  // Show review steps while AI runs
+  if (submitting) {
+    return (
+      <main className="min-h-screen bg-background">
+        <Header />
+        <div className="mx-auto max-w-2xl px-6 py-12">
+          <h1 className="font-serif text-2xl font-normal text-foreground mb-6">Submitting & running AI review…</h1>
+          <AIReviewSteps step={reviewStep} />
+        </div>
+      </main>
+    )
+  }
+
+  // Show AI review result after submission
+  if (review) {
+    const isPassed = review.verdict === "PASS"
+    return (
+      <main className="min-h-screen bg-background">
+        <Header />
+        <div className="mx-auto max-w-2xl px-6 py-12">
+          <div className={`rounded-xl border p-5 mb-6 ${isPassed ? "border-green-200 bg-green-50" : "border-amber-200 bg-amber-50"}`}>
+            <div className="mb-3 flex items-center gap-2">
+              <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${isPassed ? "bg-green-200 text-green-900" : "bg-amber-200 text-amber-900"}`}>
+                {isPassed ? "PASS" : "FAIL"}
+              </span>
+              <h1 className="font-serif text-xl font-normal text-foreground">AI Review Complete</h1>
+              <span className="ml-auto text-xs text-muted-foreground">{review.passed}/{review.total} criteria passed</span>
             </div>
+            <p className={`text-sm whitespace-pre-wrap ${isPassed ? "text-green-800" : "text-amber-800"}`}>{review.summary}</p>
+            {review.remediation && (
+              <div className="mt-3 border-t border-amber-200 pt-3">
+                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-amber-900">Suggested improvements</p>
+                <p className="text-sm text-amber-800 whitespace-pre-wrap">{review.remediation}</p>
+              </div>
+            )}
+          </div>
+          <p className="mb-6 text-sm text-muted-foreground">
+            {isPassed
+              ? "Your submission looks good. The client will review the AI findings and release payment."
+              : "The client will review the AI findings and decide whether to accept or dispute."}
+          </p>
+          <div className="flex items-center gap-3">
+            <Button asChild className="rounded-full px-6">
+              <Link href={`/gig/${id}`}>View gig</Link>
+            </Button>
+            <Button asChild variant="outline" className="rounded-full px-6">
+              <Link href="/dashboard">Dashboard</Link>
+            </Button>
           </div>
         </div>
       </main>
@@ -113,7 +223,6 @@ export default function SubmitPage({ params }: { params: Promise<{ id: string }>
           <p className="mt-1 text-sm text-muted-foreground">{gig.title}</p>
         </div>
 
-        {/* Reference */}
         <div className="mb-6 rounded-xl border bg-secondary/40 p-4">
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-1">Expected deliverables</p>
           <p className="text-sm text-foreground">{gig.deliverables}</p>
@@ -161,8 +270,8 @@ export default function SubmitPage({ params }: { params: Promise<{ id: string }>
             )}
 
             <div className="flex items-center gap-3 pt-2">
-              <Button type="submit" size="lg" className="rounded-full px-8" disabled={submitting}>
-                {submitting ? "Submitting…" : "Submit Deliverable"}
+              <Button type="submit" size="lg" className="rounded-full px-8">
+                Submit & Run AI Review
               </Button>
               <Button asChild variant="ghost" size="lg" className="rounded-full">
                 <Link href={`/gig/${id}`}>Cancel</Link>

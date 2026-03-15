@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { getSessionFromRequest } from "@/lib/auth"
 import { deployEscrow } from "@/lib/escrow"
+import { usdToEth } from "@/lib/eth-price"
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -76,11 +77,19 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       where: { id: session.id },
       select: { walletAddress: true },
     })
-    const gigEthAmount = request.gig.ethAmount
     const clientWallet = request.client.walletAddress
     const freelancerWallet = freelancer?.walletAddress
 
-    if (gigEthAmount && gigEthAmount > 0 && clientWallet && freelancerWallet) {
+    // Refresh ETH amount at accept time so the rate is current
+    const freshEthAmount = await usdToEth(request.gig.budget).catch(() => request.gig.ethAmount)
+
+    if (freshEthAmount && freshEthAmount > 0) {
+      if (!freelancerWallet) {
+        return NextResponse.json({ error: "You must save an Ethereum wallet address before accepting this gig." }, { status: 400 })
+      }
+      if (!clientWallet) {
+        return NextResponse.json({ error: "The client must save an Ethereum wallet address before their request can be accepted." }, { status: 400 })
+      }
       try {
         contractAddress = await deployEscrow(
           clientWallet as `0x${string}`,
@@ -88,7 +97,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         )
       } catch (err) {
         console.error("Escrow deploy failed:", err)
-        // Continue without contract — ETH deposit becomes optional
+        return NextResponse.json({ error: "Failed to deploy escrow contract. Ensure the ETH network is available." }, { status: 500 })
       }
     }
 
@@ -104,6 +113,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       where: { id: request.gigId },
       data: {
         status: "in_progress",
+        ...(freshEthAmount && { ethAmount: freshEthAmount }),
         ...(contractAddress && { contractAddress }),
       },
     })

@@ -12,9 +12,16 @@ model User {
   name      String
   email     String   @unique
   password  String
-  role          String   @default("freelancer")
-  walletAddress String?
-  createdAt     DateTime @default(now())
+  role              String   @default("freelancer")
+  walletAddress     String?
+  bio               String?
+  profilePicture    String?
+  industry          String?
+  professionalTitle String?
+  skills            String   @default("[]")
+  workExperience    String   @default("[]")
+  education         String   @default("[]")
+  createdAt         DateTime @default(now())
 
   gigs        Gig[]        @relation("FreelancerGigs")
   requests    Request[]    @relation("ClientRequests")
@@ -38,6 +45,7 @@ model Gig {
   freelancerArgument String?
   mediatorVerdict    String?
   mediatorReasoning  String?
+  aiReviewData       String?
   createdAt          DateTime @default(now())
 
   freelancer User         @relation("FreelancerGigs", fields: [freelancerId], references: [id])

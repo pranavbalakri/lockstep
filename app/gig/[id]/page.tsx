@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button"
 import { formatDistanceToNow, format } from "date-fns"
 import { getInitials, getAvatarColor } from "@/lib/avatar"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { createWalletClient, custom, parseEther } from "viem"
-import { sepolia, anvil } from "viem/chains"
+import { createWalletClient, createPublicClient, custom, http, parseEther } from "viem"
+import { anvil } from "viem/chains"
 import { DEADDROP_ABI } from "@/lib/contracts/DeadDrop"
 
 declare global {
@@ -35,9 +35,19 @@ interface GigData {
   contractAddress?: string
   mediatorVerdict?: string | null
   mediatorReasoning?: string | null
+  aiReviewData?: string | null
   createdAt: string
   requestCount: number
-  freelancer: { id: string; name: string }
+  freelancer: {
+    id: string
+    name: string
+    bio?: string | null
+    professionalTitle?: string | null
+    industry?: string | null
+    skills: string[]
+    workExperience: { company: string; title: string; period: string; description: string }[]
+    education: { school: string; degree: string; year: string }[]
+  }
   requests: { id: string; clientId: string; status: string; contractAddress?: string; ethAmount?: number }[]
   submission?: {
     textContent?: string
@@ -60,9 +70,24 @@ async function getWalletClient() {
   const accounts: string[] = await window.ethereum.request({ method: "eth_requestAccounts" })
   const chainIdHex: string = await window.ethereum.request({ method: "eth_chainId" })
   const chainId = parseInt(chainIdHex, 16)
-  const chain = chainId === 31337 || chainId === 1337 ? anvil : sepolia
+
+  const isAnvil = chainId === 31337 || chainId === 1337
+  if (!isAnvil) {
+    await window.ethereum.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId: "0x7a69" }], // 31337
+    }).catch(() =>
+      window.ethereum!.request({
+        method: "wallet_addEthereumChain",
+        params: [{ chainId: "0x7a69", chainName: "Anvil", nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 }, rpcUrls: ["http://127.0.0.1:8545"] }],
+      })
+    )
+  }
+
+  const chain = anvil
   const walletClient = createWalletClient({ account: accounts[0] as `0x${string}`, chain, transport: custom(window.ethereum) })
-  return { walletClient }
+  const publicClient = createPublicClient({ chain, transport: http("http://127.0.0.1:8545") })
+  return { walletClient, publicClient }
 }
 
 export default function GigPage({ params }: { params: Promise<{ id: string }> }) {
@@ -79,8 +104,11 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
   const [hasRequested, setHasRequested] = useState(false)
   const [depositDone, setDepositDone] = useState(false)
   const [reviewLoading, setReviewLoading] = useState(false)
-  const [reviewStep, setReviewStep] = useState(0)
   const [reviewError, setReviewError] = useState("")
+  const [disputeMode, setDisputeMode] = useState(false)
+  const [disputeArgument, setDisputeArgument] = useState("")
+  const [disputeLoading, setDisputeLoading] = useState(false)
+  const [disputeError, setDisputeError] = useState("")
   const [fundLoading, setFundLoading] = useState(false)
   const [fundError, setFundError] = useState("")
   const router = useRouter()
@@ -144,20 +172,23 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
     setSubmitting(false)
   }
 
+
   async function fundEscrow() {
     if (!gig?.contractAddress || !gig.ethAmount) return
     setFundLoading(true)
     setFundError("")
     try {
-      const { walletClient } = await getWalletClient()
+      const { walletClient, publicClient } = await getWalletClient()
 
-      // Deposit ETH into the already-deployed escrow contract
-      await walletClient.writeContract({
+      const hash = await walletClient.writeContract({
         address: gig.contractAddress as `0x${string}`,
         abi: DEADDROP_ABI,
         functionName: "deposit",
         value: parseEther(String(gig.ethAmount)),
       })
+
+      const receipt = await publicClient.waitForTransactionReceipt({ hash })
+      if (receipt.status !== "success") throw new Error("Transaction reverted on-chain")
 
       // Record deposit amount in DB for display
       await fetch(`/api/gigs/${id}/contract`, {
@@ -176,35 +207,45 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
     setFundLoading(false)
   }
 
-  async function handleReview(action: "accept" | "dispute") {
+  async function handleAccept() {
     setReviewLoading(true)
     setReviewError("")
-    setReviewStep(1)
-    const t1 = setTimeout(() => setReviewStep(2), 7000)
-    const t2 = setTimeout(() => setReviewStep(3), 16000)
     try {
       const res = await fetch(`/api/gigs/${id}/review`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action }),
+        body: JSON.stringify({ action: "accept" }),
       })
       const data = await res.json()
-      clearTimeout(t1); clearTimeout(t2)
-      if (!res.ok) {
-        throw new Error(data.error ?? "Review failed")
-      }
-      if (data.review?.action === "NOTIFY_FREELANCER") {
-        setReviewError(data.review.remediation ?? data.review.summary ?? "AI requested revisions before payment can be released.")
-      }
+      if (!res.ok) throw new Error(data.error ?? "Failed to release payment")
       const gigRes = await fetch(`/api/gigs/${id}`)
       if (gigRes.ok) setGig((await gigRes.json()).gig)
     } catch (e: unknown) {
-      clearTimeout(t1); clearTimeout(t2)
-      const err = e as { shortMessage?: string; message?: string }
-      setReviewError(err.shortMessage ?? err.message ?? "Review failed")
+      const err = e as { message?: string }
+      setReviewError(err.message ?? "Failed to release payment")
     }
     setReviewLoading(false)
-    setReviewStep(0)
+  }
+
+  async function handleDispute() {
+    if (!disputeArgument.trim()) { setDisputeError("Please provide an argument for your dispute."); return }
+    setDisputeLoading(true)
+    setDisputeError("")
+    try {
+      const res = await fetch(`/api/gigs/${id}/review`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "dispute", argument: disputeArgument }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? "Failed to submit dispute")
+      const gigRes = await fetch(`/api/gigs/${id}`)
+      if (gigRes.ok) setGig((await gigRes.json()).gig)
+    } catch (e: unknown) {
+      const err = e as { message?: string }
+      setDisputeError(err.message ?? "Failed to submit dispute")
+    }
+    setDisputeLoading(false)
   }
 
   if (loading) {
@@ -369,6 +410,7 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
               </section>
             )}
 
+
             {/* Escrow deposit prompt (contract deployed server-side on accept) */}
             {needsFunding && (
               <section className="mb-8 rounded-xl border bg-card p-5">
@@ -409,15 +451,8 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
               />
             )}
 
-            {gig.mediatorVerdict === "needs_revision" && gig.mediatorReasoning && (
-              <div className="mb-8 rounded-xl border border-amber-200 bg-amber-50 p-5">
-                <p className="font-medium text-amber-900">
-                  {isFreelancer
-                    ? "AI review requested revisions before payment can be released."
-                    : "AI review sent this delivery back for revisions."}
-                </p>
-                <p className="mt-2 text-sm text-amber-800 whitespace-pre-wrap">{gig.mediatorReasoning}</p>
-              </div>
+            {gig.aiReviewData && (isFreelancer || !!myRequest) && (
+              <AIReviewResult data={gig.aiReviewData} />
             )}
 
             {/* Submission / Review section (client side) */}
@@ -444,24 +479,42 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
                     <p className="text-sm text-muted-foreground">{gig.submission.notes}</p>
                   </div>
                 )}
-                {gig.contractAddress && (
-                  <p className="mb-4 text-xs text-muted-foreground">
-                    Lockstep will evaluate the submission with AI before releasing or disputing the escrow contract.
-                  </p>
-                )}
                 {reviewError && (
                   <p className="mb-4 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{reviewError}</p>
                 )}
-                {reviewLoading ? (
-                  <AIReviewSteps step={reviewStep} />
-                ) : (
+                {!disputeMode ? (
                   <div className="flex items-center gap-3">
-                    <Button className="rounded-full px-6" onClick={() => handleReview("accept")}>
-                      Run AI Review
+                    <Button className="rounded-full px-6" disabled={reviewLoading} onClick={handleAccept}>
+                      {reviewLoading ? "Releasing…" : "Accept & Release Payment"}
                     </Button>
-                    <Button variant="outline" className="rounded-full px-6 text-destructive hover:text-destructive" onClick={() => handleReview("dispute")}>
+                    <Button variant="outline" className="rounded-full px-6 text-destructive hover:text-destructive" onClick={() => setDisputeMode(true)}>
                       Dispute
                     </Button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-sm font-medium text-foreground">Your argument</label>
+                      <p className="text-xs text-muted-foreground">Explain why the deliverable does not meet the agreed scope.</p>
+                      <textarea
+                        value={disputeArgument}
+                        onChange={(e) => setDisputeArgument(e.target.value)}
+                        placeholder="Be specific and reference the agreed deliverables…"
+                        rows={4}
+                        className="rounded-lg border bg-background px-3 py-2.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary resize-none"
+                      />
+                    </div>
+                    {disputeError && (
+                      <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{disputeError}</p>
+                    )}
+                    <div className="flex items-center gap-3">
+                      <Button variant="outline" className="rounded-full px-6 text-destructive hover:text-destructive" disabled={disputeLoading} onClick={handleDispute}>
+                        {disputeLoading ? "Submitting…" : "Submit Dispute"}
+                      </Button>
+                      <Button variant="ghost" className="rounded-full" onClick={() => { setDisputeMode(false); setDisputeArgument(""); setDisputeError("") }}>
+                        Cancel
+                      </Button>
+                    </div>
                   </div>
                 )}
               </section>
@@ -492,7 +545,8 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
 
           {/* Right sidebar */}
           <div className="lg:w-72 shrink-0">
-            <div className="sticky top-6 rounded-xl border bg-card p-5 shadow-sm">
+            <div className="sticky top-6 flex flex-col gap-4">
+            <div className="rounded-xl border bg-card p-5 shadow-sm">
               <div className="mb-4 border-b pb-4">
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Budget</p>
                 <p className="mt-1 font-serif text-3xl font-normal text-foreground">${gig.budget.toLocaleString()}</p>
@@ -547,6 +601,10 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
                 </Button>
               )}
             </div>
+
+            {/* Freelancer profile card */}
+            <FreelancerCard freelancer={gig.freelancer} />
+            </div>
           </div>
         </div>
       </div>
@@ -554,49 +612,109 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
   )
 }
 
-const REVIEW_STEPS = [
-  { label: "Parsing gig scope", sub: "Extracting criteria from your deliverables" },
-  { label: "Analyzing submission", sub: "Evaluating work against criteria" },
-  { label: "Generating verdict", sub: "Deciding release or dispute" },
-]
-
-function AIReviewSteps({ step }: { step: number }) {
+function FreelancerCard({ freelancer }: { freelancer: GigData["freelancer"] }) {
   return (
-    <div className="rounded-xl border bg-secondary/30 p-4">
-      <p className="mb-3 text-sm font-medium text-foreground">AI is reviewing the submission…</p>
-      <div className="flex flex-col gap-3">
-        {REVIEW_STEPS.map((s, i) => {
-          const idx = i + 1
-          const done = step > idx
-          const active = step === idx
-          return (
-            <div key={s.label} className="flex items-start gap-3">
-              <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
-                done ? "border-primary bg-primary" :
-                active ? "border-primary bg-background" :
-                "border-border bg-background"
-              }`}>
-                {done ? (
-                  <svg className="h-2.5 w-2.5 text-primary-foreground" fill="none" viewBox="0 0 10 10">
-                    <path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                ) : active ? (
-                  <div className="h-2 w-2 animate-pulse rounded-full bg-primary" />
-                ) : null}
-              </div>
-              <div className={`transition-opacity ${active || done ? "opacity-100" : "opacity-40"}`}>
-                <p className={`text-sm ${active ? "font-medium text-foreground" : done ? "text-muted-foreground" : "text-muted-foreground"}`}>
-                  {s.label}
-                </p>
-                {active && <p className="text-xs text-muted-foreground">{s.sub}</p>}
-              </div>
-            </div>
-          )
-        })}
+    <div className="rounded-xl border bg-card p-5 shadow-sm">
+      <div className="mb-4 flex items-center gap-3">
+        <Avatar className="h-10 w-10">
+          <AvatarFallback
+            className="text-sm font-medium text-white"
+            style={{ backgroundColor: getAvatarColor(freelancer.id) }}
+          >
+            {getInitials(freelancer.name)}
+          </AvatarFallback>
+        </Avatar>
+        <div className="min-w-0">
+          <p className="truncate font-medium text-foreground">{freelancer.name}</p>
+          {freelancer.professionalTitle && (
+            <p className="truncate text-xs text-muted-foreground">{freelancer.professionalTitle}</p>
+          )}
+        </div>
       </div>
+
+      {freelancer.bio && (
+        <p className="mb-4 text-xs leading-relaxed text-muted-foreground">{freelancer.bio}</p>
+      )}
+
+      {freelancer.skills.length > 0 && (
+        <div className="mb-4">
+          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Skills</p>
+          <div className="flex flex-wrap gap-1.5">
+            {freelancer.skills.map((s) => (
+              <span key={s} className="rounded-full bg-secondary px-2.5 py-0.5 text-xs text-secondary-foreground">
+                {s}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {freelancer.workExperience.length > 0 && (
+        <div className="mb-4">
+          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Experience</p>
+          <div className="flex flex-col gap-3">
+            {freelancer.workExperience.map((w, i) => (
+              <div key={i}>
+                <p className="text-xs font-medium text-foreground">{w.title}</p>
+                <p className="text-xs text-muted-foreground">{w.company} · {w.period}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {freelancer.education.length > 0 && (
+        <div>
+          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Education</p>
+          <div className="flex flex-col gap-2">
+            {freelancer.education.map((e, i) => (
+              <div key={i}>
+                <p className="text-xs font-medium text-foreground">{e.school}</p>
+                <p className="text-xs text-muted-foreground">{e.degree} · {e.year}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
+
+interface AIVerdictData {
+  verdict: string
+  passed: number
+  failed: number
+  total: number
+  summary: string
+  remediation: string | null
+}
+
+function AIReviewResult({ data }: { data: string }) {
+  let review: AIVerdictData | null = null
+  try { review = JSON.parse(data) } catch { return null }
+  if (!review) return null
+
+  const isPassed = review.verdict === "PASS"
+  return (
+    <div className={`mb-8 rounded-xl border p-5 ${isPassed ? "border-green-200 bg-green-50" : "border-amber-200 bg-amber-50"}`}>
+      <div className="mb-3 flex items-center gap-2">
+        <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${isPassed ? "bg-green-200 text-green-900" : "bg-amber-200 text-amber-900"}`}>
+          {isPassed ? "PASS" : "FAIL"}
+        </span>
+        <h3 className="font-serif text-base font-medium text-foreground">AI Review</h3>
+        <span className="ml-auto text-xs text-muted-foreground">{review.passed}/{review.total} criteria passed</span>
+      </div>
+      <p className={`text-sm whitespace-pre-wrap ${isPassed ? "text-green-800" : "text-amber-800"}`}>{review.summary}</p>
+      {review.remediation && (
+        <div className="mt-3 border-t border-amber-200 pt-3">
+          <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-amber-900">Required revisions</p>
+          <p className="text-sm text-amber-800 whitespace-pre-wrap">{review.remediation}</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
 
 function EscrowFlow({ status, contractAddress, ethAmount, funded }: {
   status: string

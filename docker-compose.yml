@@ -11,5 +11,24 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  anvil:
+    image: ghcr.io/foundry-rs/foundry:latest
+    command: anvil
+    environment:
+      ANVIL_IP_ADDR: "0.0.0.0"
+    ports:
+      - "8545:8545"
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    env_file:
+      - .env.local
+
 volumes:
   postgres_data:

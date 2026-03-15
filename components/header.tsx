@@ -97,6 +97,13 @@ export function Header() {
                     >
                       Dashboard
                     </Link>
+                    <Link
+                      href="/profile"
+                      onClick={() => setDropdownOpen(false)}
+                      className="block rounded-lg px-3 py-2 text-sm text-foreground transition-colors hover:bg-secondary"
+                    >
+                      Profile
+                    </Link>
                     <button
                       onClick={logout}
                       className="w-full rounded-lg px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-secondary"
@@ -146,6 +153,13 @@ export function Header() {
                     className="text-sm text-foreground"
                   >
                     Dashboard
+                  </Link>
+                  <Link
+                    href="/profile"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="text-sm text-foreground"
+                  >
+                    Profile
                   </Link>
                   <button onClick={logout} className="text-left text-sm text-foreground">
                     Log out

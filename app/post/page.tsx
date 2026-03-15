@@ -10,14 +10,16 @@ import { Button } from "@/components/ui/button"
 const CATEGORIES = ["Development", "Design", "Writing", "Marketing", "Data", "Blockchain"]
 
 export default function PostPage() {
-  const [user, setUser] = useState<{ role: string } | null>(null)
+  const [user, setUser] = useState<{ role: string; walletAddress?: string } | null>(null)
+  const [walletInput, setWalletInput] = useState("")
+  const [walletSaving, setWalletSaving] = useState(false)
+  const [walletError, setWalletError] = useState("")
   const [title, setTitle] = useState("")
   const [category, setCategory] = useState("Development")
   const [description, setDescription] = useState("")
   const [budget, setBudget] = useState("")
   const [deadline, setDeadline] = useState("")
   const [deliverables, setDeliverables] = useState("")
-  const [ethAmount, setEthAmount] = useState("")
   const [skills, setSkills] = useState<string[]>([])
   const [skillInput, setSkillInput] = useState("")
   const [error, setError] = useState("")
@@ -47,6 +49,26 @@ export default function PostPage() {
     setSkills(skills.filter((x) => x !== s))
   }
 
+  async function saveWallet() {
+    if (!/^0x[0-9a-fA-F]{40}$/.test(walletInput)) {
+      setWalletError("Invalid Ethereum address format")
+      return
+    }
+    setWalletSaving(true)
+    setWalletError("")
+    const res = await fetch("/api/auth/me", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ walletAddress: walletInput }),
+    })
+    if (res.ok) {
+      setUser((u) => u ? { ...u, walletAddress: walletInput } : u)
+    } else {
+      setWalletError("Failed to save wallet address")
+    }
+    setWalletSaving(false)
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError("")
@@ -55,7 +77,7 @@ export default function PostPage() {
       const res = await fetch("/api/gigs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, category, description, budget, deadline, skills, deliverables, ethAmount: ethAmount || undefined }),
+        body: JSON.stringify({ title, category, description, budget, deadline, skills, deliverables }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -74,6 +96,38 @@ export default function PostPage() {
       <Header />
       <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
         <div className="h-8 w-48 animate-pulse rounded bg-secondary" />
+      </div>
+    </main>
+  )
+
+  if (!user.walletAddress) return (
+    <main className="min-h-screen bg-background">
+      <Header />
+      <div className="mx-auto max-w-2xl px-6 py-12">
+        <div className="mb-8">
+          <h1 className="font-serif text-3xl font-normal text-foreground">Post a gig</h1>
+        </div>
+        <div className="rounded-xl border bg-card p-6 shadow-sm">
+          <h2 className="mb-1 font-serif text-lg font-medium text-foreground">Wallet address required</h2>
+          <p className="mb-4 text-sm text-muted-foreground">
+            You need an Ethereum wallet address to receive payment when your escrow is released.
+          </p>
+          <div className="flex flex-col gap-3">
+            <input
+              type="text"
+              value={walletInput}
+              onChange={(e) => { setWalletInput(e.target.value); setWalletError("") }}
+              placeholder="0x…"
+              className="h-10 rounded-lg border bg-background px-3 font-mono text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary"
+            />
+            {walletError && <p className="text-sm text-destructive">{walletError}</p>}
+            <div>
+              <Button className="rounded-full px-6" disabled={walletSaving} onClick={saveWallet}>
+                {walletSaving ? "Saving…" : "Save & continue"}
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
     </main>
   )
@@ -172,23 +226,6 @@ export default function PostPage() {
                   className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
                 />
               </div>
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-foreground">Required ETH deposit <span className="font-normal text-muted-foreground">(optional)</span></label>
-              <div className="flex h-10 items-center rounded-lg border bg-background px-3 gap-1 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-colors">
-                <span className="text-sm text-muted-foreground">Ξ</span>
-                <input
-                  type="number"
-                  min="0"
-                  step="any"
-                  value={ethAmount}
-                  onChange={(e) => setEthAmount(e.target.value)}
-                  placeholder="0.05"
-                  className="flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
-                />
-              </div>
-              <p className="text-xs text-muted-foreground">If set, the client must deposit this amount into an escrow contract when you accept their hire request. The AI reviews delivery and releases funds.</p>
             </div>
 
             <div className="flex flex-col gap-1.5">

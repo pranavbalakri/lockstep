@@ -7,7 +7,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   const gig = await prisma.gig.findUnique({
     where: { id },
     include: {
-      freelancer: { select: { id: true, name: true } },
+      freelancer: { select: { id: true, name: true, bio: true, professionalTitle: true, industry: true, skills: true, workExperience: true, education: true } },
       requests: { select: { id: true, clientId: true, status: true, contractAddress: true, ethAmount: true } },
       submission: true,
     },
@@ -20,6 +20,12 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       ...gig,
       skills: JSON.parse(gig.skills),
       requestCount: gig.requests.length,
+      freelancer: {
+        ...gig.freelancer,
+        skills: JSON.parse(gig.freelancer.skills ?? "[]"),
+        workExperience: JSON.parse(gig.freelancer.workExperience ?? "[]"),
+        education: JSON.parse(gig.freelancer.education ?? "[]"),
+      },
     },
   })
 }

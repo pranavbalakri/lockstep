@@ -12,7 +12,7 @@ async function main() {
   await prisma.gig.deleteMany()
   await prisma.user.deleteMany()
 
-  const password = await bcrypt.hash("password123", 10)
+  const password = await bcrypt.hash("12345678", 10)
 
   const wallets = {
     alex: "0xB1Ea11ff06A187bE5811c5eCF4cE25eaEF156ae8",
@@ -22,22 +22,201 @@ async function main() {
     sam: "0x9f2aDfc32F35c36A6D6b24Bb9C6fA9b5f0e42A10",
     taylor: "0x8A1CE3c3A419EeD9b4d4F4C5aF2Ac91B8711e111",
     casey: "0x91C0ffB5734A0A44AE1d0b4c4dc5488ef5591111",
+    client: "0xB1Ea11ff06A187bE5811c5eCF4cE25eaEF156ae8",
+    freelancer: "0x266324a33E995D20Ac99CdB8a5CcdD476bBC4Be5"
   }
 
-  async function createUser(name: string, email: string, role: "client" | "freelancer", walletAddress: string) {
+  type Profile = {
+    bio?: string
+    profilePicture?: string
+    industry?: string
+    professionalTitle?: string
+    skills?: string[]
+    workExperience?: { company: string; title: string; period: string; description: string }[]
+    education?: { school: string; degree: string; year: string }[]
+  }
+
+  async function createUser(name: string, email: string, role: "client" | "freelancer", walletAddress: string, profile: Profile = {}) {
+    const { skills = [], workExperience = [], education = [], ...rest } = profile
     return prisma.user.create({
-      data: { name, email, password, role, walletAddress },
+      data: {
+        name,
+        email,
+        password,
+        role,
+        walletAddress,
+        ...rest,
+        skills: JSON.stringify(skills),
+        workExperience: JSON.stringify(workExperience),
+        education: JSON.stringify(education),
+      },
     })
   }
 
   const [alex, maya, riley, jordan, sam, taylor, casey] = await Promise.all([
-    createUser("Alex Chen", "alex@lockstep.dev", "client", wallets.alex),
-    createUser("Maya Brooks", "maya@lockstep.dev", "client", wallets.maya),
-    createUser("Riley Gomez", "riley@lockstep.dev", "client", wallets.riley),
-    createUser("Jordan Kim", "jordan@lockstep.dev", "freelancer", wallets.jordan),
-    createUser("Sam Patel", "sam@lockstep.dev", "freelancer", wallets.sam),
-    createUser("Taylor Nguyen", "taylor@lockstep.dev", "freelancer", wallets.taylor),
-    createUser("Casey Rivera", "casey@lockstep.dev", "freelancer", wallets.casey),
+    createUser("Alex Chen", "alex@giggle.dev", "client", wallets.alex, {
+      professionalTitle: "Co-Founder & CTO",
+      industry: "SaaS / Fintech",
+      bio: "Building a B2B payments infrastructure company. I hire freelancers to move fast on product and content without growing headcount prematurely.",
+      skills: ["Product Strategy", "Engineering Leadership", "B2B SaaS", "Fintech"],
+      workExperience: [
+        {
+          company: "Arcflow (current)",
+          title: "Co-Founder & CTO",
+          period: "2024 – present",
+          description: "Building a B2B payments infrastructure platform for mid-market finance teams. Leading product and engineering.",
+        },
+        {
+          company: "Stripe",
+          title: "Senior Software Engineer",
+          period: "2021 – 2024",
+          description: "Worked on the Billing team, focusing on subscription lifecycle management and invoice generation at scale.",
+        },
+      ],
+      education: [
+        { school: "UC Berkeley", degree: "B.S. Electrical Engineering & Computer Science", year: "2021" },
+      ],
+    }),
+    createUser("Maya Brooks", "maya@giggle.dev", "client", wallets.maya, {
+      professionalTitle: "Head of Product",
+      industry: "SaaS",
+      bio: "Product lead at a growth-stage SaaS company. I work with freelancers on research, lifecycle, and analytics projects to complement our in-house team.",
+      skills: ["Product Management", "User Research", "Growth", "Roadmapping"],
+      workExperience: [
+        {
+          company: "Tablehook",
+          title: "Head of Product",
+          period: "2023 – present",
+          description: "Leading product for a restaurant reservation and CRM platform. Own roadmap, discovery, and cross-functional execution.",
+        },
+        {
+          company: "Notion",
+          title: "Product Manager",
+          period: "2020 – 2023",
+          description: "PM on the Collaboration team. Shipped real-time comments, @-mentions, and notification preferences used by millions of users.",
+        },
+      ],
+      education: [
+        { school: "Northwestern University", degree: "B.A. Cognitive Science", year: "2020" },
+      ],
+    }),
+    createUser("Riley Gomez", "riley@giggle.dev", "client", wallets.riley, {
+      professionalTitle: "Founder & CEO",
+      industry: "Developer Tools",
+      bio: "Founder of a developer tools startup. We're launching our first product and working with freelancers on go-to-market, brand, and community.",
+      skills: ["Startup Strategy", "Developer GTM", "Fundraising", "Community Building"],
+      workExperience: [
+        {
+          company: "Portkey (current)",
+          title: "Founder & CEO",
+          period: "2025 – present",
+          description: "Building an API observability and cost management platform for teams running LLM-powered products.",
+        },
+        {
+          company: "Datadog",
+          title: "Senior Product Manager",
+          period: "2022 – 2025",
+          description: "PM for the APM and distributed tracing product. Grew the feature set and enterprise customer base significantly over 3 years.",
+        },
+      ],
+      education: [
+        { school: "Cornell University", degree: "B.S. Computer Science", year: "2022" },
+      ],
+    }),
+    createUser("Jordan Kim", "jordan@giggle.dev", "freelancer", wallets.jordan, {
+      professionalTitle: "Full-Stack Developer & Design Generalist",
+      industry: "Technology",
+      bio: "Full-stack developer with 4+ years shipping production React dashboards, fintech interfaces, and design systems. I take on select design, writing, and data projects too — I like variety and I work fast.",
+      skills: ["React", "TypeScript", "Next.js", "Tailwind CSS", "Figma", "Python", "REST APIs", "Technical Writing"],
+      workExperience: [
+        {
+          company: "Freelance",
+          title: "Independent Developer & Designer",
+          period: "2022 – present",
+          description: "Built 15+ production dashboards and UI systems for SaaS clients. Also deliver brand identities, API documentation, and data pipelines.",
+        },
+        {
+          company: "Lively",
+          title: "Frontend Engineer",
+          period: "2020 – 2022",
+          description: "Built the admin portal and reporting suite for an HSA/FSA benefits platform. Led the React migration from a legacy jQuery codebase.",
+        },
+      ],
+      education: [
+        { school: "Georgia Tech", degree: "B.S. Computer Science", year: "2020" },
+      ],
+    }),
+    createUser("Sam Patel", "sam@giggle.dev", "freelancer", wallets.sam, {
+      professionalTitle: "Smart Contract Auditor & Mobile Engineer",
+      industry: "Blockchain / Web3",
+      bio: "Security-first engineer specializing in Solidity audits and iOS development. 7 years in mobile, 3 years deep in EVM security. I also take ML modeling and SEO content projects when they're a strong fit.",
+      skills: ["Solidity", "EVM Security", "Swift", "iOS", "Python", "Machine Learning", "scikit-learn", "SEO Writing"],
+      workExperience: [
+        {
+          company: "Freelance",
+          title: "Independent Auditor & Engineer",
+          period: "2021 – present",
+          description: "Audited 20+ DeFi protocols. Fixed critical reentrancy and access-control bugs pre-mainnet. Also builds iOS apps and ML models for select clients.",
+        },
+        {
+          company: "Cash App",
+          title: "iOS Engineer",
+          period: "2018 – 2021",
+          description: "Worked on the core payments and sending flow. Owned crash instrumentation, performance monitoring, and the UIKit-to-SwiftUI migration strategy.",
+        },
+      ],
+      education: [
+        { school: "UT Austin", degree: "B.S. Computer Science", year: "2018" },
+      ],
+    }),
+    createUser("Taylor Nguyen", "taylor@giggle.dev", "freelancer", wallets.taylor, {
+      professionalTitle: "E-commerce Engineer & Product Researcher",
+      industry: "E-commerce",
+      bio: "Shopify developer and product researcher helping DTC brands improve performance and conversion. I combine technical optimization with customer insight to drive measurable results.",
+      skills: ["Shopify", "Liquid", "JavaScript", "Core Web Vitals", "User Research", "Amplitude", "Mixpanel", "Email Copywriting"],
+      workExperience: [
+        {
+          company: "Freelance",
+          title: "Independent E-commerce Consultant",
+          period: "2022 – present",
+          description: "Optimize Shopify storefronts for speed and conversion. Also runs customer research synthesis and analytics instrumentation projects for product teams.",
+        },
+        {
+          company: "Allbirds",
+          title: "Frontend Developer",
+          period: "2019 – 2022",
+          description: "Owned the Shopify theme and storefront performance. Improved mobile Lighthouse scores from 38 to 81. Built the custom size-finder and product configurator.",
+        },
+      ],
+      education: [
+        { school: "UC San Diego", degree: "B.S. Cognitive Science with a Specialization in HCI", year: "2019" },
+      ],
+    }),
+    createUser("Casey Rivera", "casey@giggle.dev", "freelancer", wallets.casey, {
+      professionalTitle: "Brand Designer & Content Strategist",
+      industry: "Design & Marketing",
+      bio: "Brand designer and content strategist for early-stage startups. I handle pitch decks, marketing sites, developer content, and community programs — whatever helps a small team punch above its weight.",
+      skills: ["Brand Design", "Figma", "Pitch Decks", "Webflow", "Technical Writing", "Developer Relations", "Community Growth", "Storytelling"],
+      workExperience: [
+        {
+          company: "Freelance",
+          title: "Independent Designer & Strategist",
+          period: "2021 – present",
+          description: "Design and content partner for 30+ startups from seed to Series B. Specialties: brand identity, investor decks, Webflow sites, and dev-facing content.",
+        },
+        {
+          company: "Linear",
+          title: "Brand Designer",
+          period: "2019 – 2021",
+          description: "First design hire. Built the visual identity system, website, and marketing design from scratch. Shipped the launch website and all early brand touchpoints.",
+        },
+      ],
+      education: [
+        { school: "RISD", degree: "B.F.A. Graphic Design", year: "2019" },
+      ],
+    }),
+    createUser("Client Account", "client@giggle.dev", "client", wallets.client),
+    createUser("Freelancer Account", "freelancer@giggle.dev", "freelancer", wallets.freelancer),
   ])
 
   const gigDefinitions = [
@@ -384,14 +563,6 @@ async function main() {
   ]
 
   await prisma.request.createMany({ data: requests })
-
-  console.log("✓ Seed complete")
-  console.log("  Accounts:")
-  console.log("   - Clients: alex@lockstep.dev, maya@lockstep.dev, riley@lockstep.dev")
-  console.log("   - Freelancers: jordan@lockstep.dev, sam@lockstep.dev, taylor@lockstep.dev, casey@lockstep.dev")
-  console.log("  Password: password123")
-  console.log(`  Gigs: ${gigs.length} created`)
-  console.log(`  Requests: ${requests.length} created`)
 }
 
 main()

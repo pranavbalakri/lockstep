@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { getSessionFromRequest } from "@/lib/auth"
+import { usdToEth } from "@/lib/eth-price"
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
@@ -69,11 +70,13 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { title, category, description, budget, deadline, skills, deliverables, ethAmount } = await req.json()
+    const { title, category, description, budget, deadline, skills, deliverables } = await req.json()
 
     if (!title || !category || !description || !budget || !deadline || !deliverables) {
       return NextResponse.json({ error: "All fields required" }, { status: 400 })
     }
+
+    const ethAmount = await usdToEth(parseFloat(budget))
 
     const gig = await prisma.gig.create({
       data: {
@@ -85,7 +88,7 @@ export async function POST(req: NextRequest) {
         deadline: new Date(deadline),
         skills: JSON.stringify(skills ?? []),
         deliverables,
-        ...(ethAmount ? { ethAmount: parseFloat(ethAmount) } : {}),
+        ethAmount,
       },
     })
 

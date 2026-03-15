@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { getSessionFromRequest } from "@/lib/auth"
+import { runAiReview } from "@/lib/ai-review"
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -9,22 +10,24 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const gig = await prisma.gig.findUnique({ where: { id } })
+  const gig = await prisma.gig.findUnique({
+    where: { id },
+    include: { requests: { where: { status: "accepted" }, select: { ethAmount: true } } },
+  })
   if (!gig) return NextResponse.json({ error: "Not found" }, { status: 404 })
   if (gig.freelancerId !== session.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   if (gig.status !== "in_progress") {
     return NextResponse.json({ error: "Gig is not in progress" }, { status: 400 })
   }
+  if (gig.ethAmount && gig.ethAmount > 0 && !gig.requests[0]?.ethAmount) {
+    return NextResponse.json({ error: "Client must deposit ETH escrow before you can submit" }, { status: 400 })
+  }
 
   const { textContent, url, notes } = await req.json()
 
-  const submission = await prisma.submission.upsert({
+  await prisma.submission.upsert({
     where: { gigId: id },
-    update: {
-      textContent: textContent ?? null,
-      url: url ?? null,
-      notes: notes ?? null,
-    },
+    update: { textContent: textContent ?? null, url: url ?? null, notes: notes ?? null },
     create: {
       gigId: id,
       freelancerId: session.id,
@@ -35,16 +38,27 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     },
   })
 
-  await prisma.gig.update({
-    where: { id },
-    data: {
-      status: "submitted",
-      mediatorVerdict: null,
-      mediatorReasoning: null,
-      clientArgument: null,
-      freelancerArgument: null,
-    },
-  })
+  try {
+    const review = await runAiReview(
+      { description: gig.description, deliverables: gig.deliverables, category: gig.category },
+      { textContent: textContent ?? null, url: url ?? null }
+    )
 
-  return NextResponse.json({ submission }, { status: 201 })
+    await prisma.gig.update({
+      where: { id },
+      data: {
+        status: "submitted",
+        mediatorVerdict: null,
+        mediatorReasoning: null,
+        clientArgument: null,
+        freelancerArgument: null,
+        aiReviewData: JSON.stringify(review.verdict),
+      },
+    })
+
+    return NextResponse.json({ review: review.verdict }, { status: 201 })
+  } catch (err) {
+    console.error("AI review failed during submission:", err)
+    return NextResponse.json({ error: "AI review failed. Please try submitting again." }, { status: 500 })
+  }
 }

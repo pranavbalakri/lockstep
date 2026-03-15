@@ -40,6 +40,7 @@ export default function DashboardPage() {
   const [walletInput, setWalletInput] = useState("")
   const [walletSaving, setWalletSaving] = useState(false)
   const [walletMsg, setWalletMsg] = useState("")
+  const [actionError, setActionError] = useState("")
   const router = useRouter()
 
   const loadData = useCallback(async (u: SessionUser) => {
@@ -93,11 +94,22 @@ export default function DashboardPage() {
   }
 
   async function handleRequestAction(requestId: string, action: "accept" | "reject") {
-    await fetch(`/api/requests/${requestId}`, {
+    setActionError("")
+    if (action === "accept" && !user?.walletAddress) {
+      setWalletMsg("You must save an Ethereum wallet address before accepting a paid gig.")
+      window.scrollTo({ top: 0, behavior: "smooth" })
+      return
+    }
+    const res = await fetch(`/api/requests/${requestId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action }),
     })
+    if (!res.ok) {
+      const data = await res.json()
+      setActionError(data.error ?? "Action failed")
+      return
+    }
     if (user) loadData(user)
   }
 
@@ -153,7 +165,7 @@ export default function DashboardPage() {
         {user.role === "client" ? (
           <ClientDashboard requests={requests} />
         ) : (
-          <FreelancerDashboard gigs={gigs} requests={requests} onRequestAction={handleRequestAction} />
+          <FreelancerDashboard gigs={gigs} requests={requests} onRequestAction={handleRequestAction} actionError={actionError} />
         )}
       </div>
     </main>
@@ -299,8 +311,10 @@ function ClientDashboard({ requests }: { requests: Request[] }) {
   )
 }
 
-function FreelancerDashboard({ gigs, requests, onRequestAction }: { gigs: Gig[]; requests: Request[]; onRequestAction: (id: string, action: "accept" | "reject") => void }) {
+function FreelancerDashboard({ gigs, requests, onRequestAction, actionError }: { gigs: Gig[]; requests: Request[]; onRequestAction: (id: string, action: "accept" | "reject") => void; actionError: string }) {
   const acceptedRequests = requests.filter((r) => r.status === "accepted")
+  const activeJobs = acceptedRequests.filter((r) => r.gig.status === "in_progress")
+  const completedJobs = acceptedRequests.filter((r) => ["submitted", "completed", "disputed"].includes(r.gig.status ?? ""))
 
   return (
     <div className="flex flex-col gap-12">
@@ -356,11 +370,11 @@ function FreelancerDashboard({ gigs, requests, onRequestAction }: { gigs: Gig[];
         )}
       </section>
 
-      {acceptedRequests.length > 0 && (
+      {activeJobs.length > 0 && (
         <section>
           <h2 className="mb-4 font-serif text-xl font-medium">Active Jobs</h2>
           <div className="flex flex-col gap-3">
-            {acceptedRequests.map((req) => (
+            {activeJobs.map((req) => (
               <div key={req.id} className="flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-card p-5">
                 <div>
                   <p className="font-medium text-foreground">{req.gig.title}</p>
@@ -378,8 +392,38 @@ function FreelancerDashboard({ gigs, requests, onRequestAction }: { gigs: Gig[];
         </section>
       )}
 
+      {completedJobs.length > 0 && (
+        <section>
+          <h2 className="mb-4 font-serif text-xl font-medium">Completed Jobs</h2>
+          <div className="flex flex-col gap-3">
+            {completedJobs.map((req) => (
+              <div key={req.id} className="flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-card p-5">
+                <div>
+                  <p className="font-medium text-foreground">{req.gig.title}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {req.client?.name && <span>From {req.client.name} · </span>}
+                    ${req.gig.budget.toLocaleString()} · Due {req.gig.deadline ? format(new Date(req.gig.deadline), "MMM d, yyyy") : "—"}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_STYLES[req.gig.status ?? ""] ?? "bg-secondary text-foreground"}`}>
+                    {(req.gig.status ?? "").replace("_", " ")}
+                  </span>
+                  <Button asChild size="sm" variant="outline" className="rounded-full px-5">
+                    <Link href={`/gig/${req.gig.id}`}>View</Link>
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       <section>
         <h2 className="mb-4 font-serif text-xl font-medium">Incoming Hire Requests</h2>
+        {actionError && (
+          <p className="mb-4 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{actionError}</p>
+        )}
         {requests.length === 0 ? (
           <div className="rounded-xl border bg-card p-10 text-center">
             <p className="text-muted-foreground">No hire requests yet.</p>
