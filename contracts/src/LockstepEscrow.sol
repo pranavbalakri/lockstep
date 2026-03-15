@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-/// @title LockstepEscrow (DeadDrop)
-/// @notice Three-party escrow: client deposits ETH, arbiter (Lockstep server) resolves.
+/// @title GiggleEscrow (DeadDrop)
+/// @notice Three-party escrow: client deposits ETH, arbiter (Giggle server) resolves.
 ///         - CLIENT calls deposit() to fund the escrow.
 ///         - CLIENT or ARBITER can call release() to send ETH to the freelancer (work accepted).
 ///         - ARBITER can call dispute() to refund ETH to the client (AI verdict: incomplete).

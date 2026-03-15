@@ -3,7 +3,7 @@ import json
 from agents import call_agent
 from models import CriterionResult, VerdictOutput
 
-SYSTEM_PROMPT = """You are a verdict synthesis agent for Lockstep, a freelance payment system. You receive per-criterion evaluation results from the Deliverable Analyzer and must produce an overall verdict.
+SYSTEM_PROMPT = """You are a verdict synthesis agent for Giggle, a freelance payment system. You receive per-criterion evaluation results from the Deliverable Analyzer and must produce an overall verdict.
 
 Rules:
 1. If ALL criteria have result "PASS": overall verdict is "PASS", action is "RELEASE".

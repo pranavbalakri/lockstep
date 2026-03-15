@@ -1,5 +1,5 @@
-// Generated from contracts/src/LockstepEscrow.sol
-// Compile: cd contracts && npx solc --abi --bin --optimize --optimize-runs 200 src/LockstepEscrow.sol
+// Generated from contracts/src/GiggleEscrow.sol
+// Compile: cd contracts && npx solc --abi --bin --optimize --optimize-runs 200 src/GiggleEscrow.sol
 
 export const DEADDROP_ABI = [
   {

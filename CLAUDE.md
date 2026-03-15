@@ -1,13 +1,13 @@
-# Lockstep — Claude Code Guidelines
+# Giggle — Claude Code Guidelines
 
-Lockstep is a trustless freelancer payment platform. The AI layer evaluates deliverables against agreed scope and drives escrow release/dispute on a smart contract. Understand the full stack before touching any layer.
+Giggle is a trustless freelancer payment platform. The AI layer evaluates deliverables against agreed scope and drives escrow release/dispute on a smart contract. Understand the full stack before touching any layer.
 
 ---
 
 ## Project Structure
 
 ```
-lockstep/
+giggle/
 ├── app/              # Next.js 16 frontend (App Router)
 ├── lib/              # Shared utilities, Prisma client, auth helpers
 ├── prisma/           # Schema (PostgreSQL), migrations, seed

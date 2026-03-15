@@ -14,8 +14,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Lockstep | Freelance Marketplace',
-  description: 'Find top-tier, remote roles for your expertise. Available only on Lockstep.',
+  title: 'Giggle | Freelance Marketplace',
+  description: 'Find top-tier, remote roles for your expertise. Available only on Giggle.',
   generator: 'v0.app',
   icons: {
     icon: [

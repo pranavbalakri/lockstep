@@ -3,7 +3,7 @@ import json
 from agents import call_agent
 from models import Criterion, AnalyzerOutput
 
-SYSTEM_PROMPT = """You are a deliverable evaluation agent for Lockstep, a freelance payment system. You receive a freelancer's submitted work and a set of acceptance criteria. Your job is to evaluate the deliverable against EACH criterion independently.
+SYSTEM_PROMPT = """You are a deliverable evaluation agent for Giggle, a freelance payment system. You receive a freelancer's submitted work and a set of acceptance criteria. Your job is to evaluate the deliverable against EACH criterion independently.
 
 Rules:
 1. Evaluate each criterion on its own merits. A deliverable can pass some criteria and fail others.

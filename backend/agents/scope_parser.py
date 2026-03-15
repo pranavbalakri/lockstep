@@ -1,7 +1,7 @@
 from agents import call_agent
 from models import ScopeParserOutput
 
-SYSTEM_PROMPT = """You are a scope analysis agent for a freelance payment system called Lockstep. Your job is to extract precise, measurable acceptance criteria from a natural-language work description.
+SYSTEM_PROMPT = """You are a scope analysis agent for a freelance payment system called Giggle. Your job is to extract precise, measurable acceptance criteria from a natural-language work description.
 
 You will receive a job description and a work type (writing, code, design, or other). Extract every verifiable requirement.
 

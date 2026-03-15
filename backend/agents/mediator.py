@@ -3,7 +3,7 @@ import json
 from agents import call_agent
 from models import Criterion, CriterionResult, VerdictOutput, MediatorOutput
 
-SYSTEM_PROMPT = """You are a neutral mediation agent for Lockstep, a freelance payment system. A dispute has been filed on a completed evaluation. You must review all evidence and propose a fair percentage-based fund split.
+SYSTEM_PROMPT = """You are a neutral mediation agent for Giggle, a freelance payment system. A dispute has been filed on a completed evaluation. You must review all evidence and propose a fair percentage-based fund split.
 
 You will receive:
 - The original job description and acceptance criteria

@@ -1,5 +1,5 @@
 """
-End-to-end pipeline tests for the Lockstep AI agent backend.
+End-to-end pipeline tests for the Giggle AI agent backend.
 Runs two test scenarios:
   Test 1: Writing — happy path, bad path, and mediation
   Test 2: Code — happy path and bad path
@@ -338,7 +338,7 @@ async def test_code():
 
 async def main():
     total_start = time.time()
-    print("\nLOCKSTEP AGENT PIPELINE — END-TO-END TEST")
+    print("\nGIGGLE AGENT PIPELINE — END-TO-END TEST")
     print(f"Started at: {time.strftime('%Y-%m-%d %H:%M:%S')}")
 
     await test_writing()

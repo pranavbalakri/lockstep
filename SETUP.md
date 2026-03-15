@@ -1,4 +1,4 @@
-# Lockstep Setup
+# Giggle Setup
 
 ## Prerequisites
 
@@ -14,7 +14,7 @@
 Create `.env.local` in the repo root:
 
 ```
-DATABASE_URL=postgresql://lockstep:lockstep@localhost:5432/lockstep
+DATABASE_URL=postgresql://giggle:giggle@localhost:5432/giggle
 ANTHROPIC_API_KEY=sk-ant-...
 ETH_RPC_URL=http://localhost:8545
 ETH_CHAIN=anvil
