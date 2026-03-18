@@ -2,6 +2,7 @@ from __future__ import annotations
 import json
 from agents import call_agent
 from models import Criterion, AnalyzerOutput
+from github_fetcher import fetch_github_content
 
 SYSTEM_PROMPT = """You are a deliverable evaluation agent for Giggle, a freelance payment system. You receive a freelancer's submitted work and a set of acceptance criteria. Your job is to evaluate the deliverable against EACH criterion independently.
 
@@ -39,7 +40,19 @@ async def analyze_deliverable(
     criteria: list[Criterion],
     work_type: str
 ) -> AnalyzerOutput:
-    word_count = len(deliverable_text.split())
+    # If a GitHub URL is supplied, fetch the actual code content and prepend it.
+    github_content: str | None = None
+    if deliverable_url:
+        github_content = await fetch_github_content(deliverable_url)
+
+    full_text = deliverable_text
+    if github_content:
+        if full_text.strip():
+            full_text = github_content + "\n\n=== FREELANCER NOTES ===\n" + full_text
+        else:
+            full_text = github_content
+
+    word_count = len(full_text.split())
     user_message = f"""WORK TYPE: {work_type}
 
 ACCEPTANCE CRITERIA:
@@ -49,8 +62,8 @@ MEASURED WORD COUNT: {word_count} words (computed externally, this is exact)
 
 SUBMITTED DELIVERABLE:
 ---
-{deliverable_text}
+{full_text}
 ---"""
-    if deliverable_url and not deliverable_text:
-        user_message += f"\nThe deliverable is hosted at: {deliverable_url}. Evaluate based on the URL description and any context provided."
+    if deliverable_url and not github_content and not deliverable_text:
+        user_message += f"\nThe deliverable is hosted at: {deliverable_url}. Evaluate based on the URL and any context provided."
     return await call_agent(SYSTEM_PROMPT, user_message, AnalyzerOutput)

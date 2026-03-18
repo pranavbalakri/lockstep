@@ -4,3 +4,4 @@ node_modules
 .env.local
 backend/.env
 /lib/generated/prisma
+deposit_anvil.sh

@@ -1,12 +1,17 @@
 from __future__ import annotations
 from models import (
     ScopeParserOutput, AnalyzerOutput, VerdictOutput, MediatorOutput,
-    Criterion, CriterionResult
+    Criterion, CriterionResult, DeliverablesValidationOutput
 )
 from agents.scope_parser import parse_scope
 from agents.deliverable_analyzer import analyze_deliverable
 from agents.verdict_agent import render_verdict
 from agents.mediator import mediate_dispute
+from agents.deliverables_validator import validate_deliverables
+
+
+async def run_deliverables_validation(description: str, deliverables: str, work_type: str) -> DeliverablesValidationOutput:
+    return await validate_deliverables(description, deliverables, work_type)
 
 
 async def run_scope_parsing(description: str, work_type: str) -> ScopeParserOutput:

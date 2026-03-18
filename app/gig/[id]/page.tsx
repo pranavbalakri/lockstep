@@ -101,6 +101,7 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
   const [walletInput, setWalletInput] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [requestError, setRequestError] = useState("")
+  const [requestIssues, setRequestIssues] = useState<string[]>([])
   const [hasRequested, setHasRequested] = useState(false)
   const [depositDone, setDepositDone] = useState(false)
   const [reviewLoading, setReviewLoading] = useState(false)
@@ -168,6 +169,7 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
       if (gig) setGig({ ...gig, requestCount: gig.requestCount + 1 })
     } else {
       setRequestError(data.error ?? "Failed to submit")
+      if (data.issues?.length) setRequestIssues(data.issues)
     }
     setSubmitting(false)
   }
@@ -396,7 +398,14 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
                     </div>
                   )}
                   {requestError && (
-                    <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{requestError}</p>
+                    <div className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                      <p>{requestError}</p>
+                      {requestIssues.length > 0 && (
+                        <ul className="mt-1.5 list-disc pl-4 space-y-0.5">
+                          {requestIssues.map((issue, i) => <li key={i}>{issue}</li>)}
+                        </ul>
+                      )}
+                    </div>
                   )}
                   <div className="flex items-center gap-3">
                     <Button type="submit" className="rounded-full px-6" disabled={submitting}>

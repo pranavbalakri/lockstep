@@ -51,6 +51,11 @@ class VerdictOutput(BaseModel):
     action: VerdictAction
 
 
+class DeliverablesValidationOutput(BaseModel):
+    valid: bool
+    issues: list[str]
+
+
 class ProposedSplit(BaseModel):
     freelancer_percentage: int
     client_refund_percentage: int

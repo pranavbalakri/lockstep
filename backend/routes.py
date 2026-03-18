@@ -4,12 +4,18 @@ from pydantic import BaseModel
 from typing import Optional
 from models import (
     ScopeParserOutput, Criterion, CriterionResult,
-    VerdictOutput, MediatorOutput, AnalyzerOutput
+    VerdictOutput, MediatorOutput, AnalyzerOutput, DeliverablesValidationOutput
 )
-from pipeline import run_scope_parsing, run_evaluation, run_mediation
+from pipeline import run_scope_parsing, run_evaluation, run_mediation, run_deliverables_validation
 import config
 
 router = APIRouter()
+
+
+class ValidateDeliverablesRequest(BaseModel):
+    description: str
+    deliverables: str
+    work_type: str
 
 
 class ParseScopeRequest(BaseModel):
@@ -37,6 +43,14 @@ class MediateRequest(BaseModel):
     verdict: VerdictOutput
     client_argument: str
     freelancer_argument: str
+
+
+@router.post("/validate-deliverables", response_model=DeliverablesValidationOutput)
+async def validate_deliverables_endpoint(req: ValidateDeliverablesRequest):
+    try:
+        return await run_deliverables_validation(req.description, req.deliverables, req.work_type)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/parse-scope", response_model=ScopeParserOutput)
