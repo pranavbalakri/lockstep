@@ -195,6 +195,9 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
   const isFreelancer = user?.id === gig.freelancer.id
   const isClient = user?.role === "client"
   const myRequest = gig.requests?.find((r) => r.clientId === user?.id)
+  // For freelancers, find the accepted request to check escrow funding status
+  const acceptedRequest = gig.requests?.find((r) => r.status === "accepted")
+  const escrowFunded = isFreelancer ? !!acceptedRequest?.ethAmount : !!myRequest?.ethAmount
   const canSubmit = isFreelancer && (gig.status === "in_progress" || gig.status === "submitted")
   // Show pay button when: client accepted, contract deployed, ETH required, not yet paid
   const needsPayment = isClient && gig.status === "in_progress" && !!gig.contractAddress && !!gig.ethAmount && !myRequest?.ethAmount
@@ -350,7 +353,7 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
               <EscrowFlow
                 status={gig.status}
                 ethAmount={gig.ethAmount}
-                funded={!!myRequest?.ethAmount}
+                funded={escrowFunded}
               />
             )}
 

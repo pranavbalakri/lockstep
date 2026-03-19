@@ -379,20 +379,40 @@ function FreelancerDashboard({ gigs, requests, onRequestAction, actionError }: {
         <section>
           <h2 className="mb-4 font-serif text-xl font-medium">Active Jobs</h2>
           <div className="flex flex-col gap-3">
-            {activeJobs.map((req) => (
-              <div key={req.id} className="flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-card p-5">
-                <div>
-                  <p className="font-medium text-foreground">{req.gig.title}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {req.client?.name && <span>From {req.client.name} · </span>}
-                    ${req.gig.budget.toLocaleString()} · Due {req.gig.deadline ? format(new Date(req.gig.deadline), "MMM d, yyyy") : "—"}
-                  </p>
+            {activeJobs.map((req) => {
+              const escrowFunded = !!req.ethAmount
+              const awaitingDeposit = !!req.gig.contractAddress && !!req.gig.ethAmount && !req.ethAmount
+              return (
+                <div key={req.id} className="rounded-xl border bg-card p-5">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                      <p className="font-medium text-foreground">{req.gig.title}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {req.client?.name && <span>From {req.client.name} · </span>}
+                        ${req.gig.budget.toLocaleString()} · Due {req.gig.deadline ? format(new Date(req.gig.deadline), "MMM d, yyyy") : "—"}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {escrowFunded && (
+                        <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                          Escrow funded
+                        </span>
+                      )}
+                      <Button asChild size="sm" className="rounded-full px-5">
+                        <Link href={`/gig/${req.gig.id}/submit`}>Submit Deliverable</Link>
+                      </Button>
+                    </div>
+                  </div>
+                  {awaitingDeposit && (
+                    <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+                      <p className="text-sm text-amber-800">
+                        Awaiting client deposit of <span className="font-semibold">Ξ {req.gig.ethAmount} ETH</span> to fund the escrow.
+                      </p>
+                    </div>
+                  )}
                 </div>
-                <Button asChild size="sm" className="rounded-full px-5">
-                  <Link href={`/gig/${req.gig.id}/submit`}>Submit Deliverable</Link>
-                </Button>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </section>
       )}

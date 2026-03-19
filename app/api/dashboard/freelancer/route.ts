@@ -16,9 +16,16 @@ export async function GET(req: NextRequest) {
 
   const requests = await prisma.request.findMany({
     where: { gig: { freelancerId: session.id } },
-    include: {
+    select: {
+      id: true,
+      gigId: true,
+      proposal: true,
+      proposedTimeline: true,
+      status: true,
+      createdAt: true,
+      ethAmount: true,
       client: { select: { id: true, name: true } },
-      gig: { select: { id: true, title: true, budget: true, deadline: true } },
+      gig: { select: { id: true, title: true, budget: true, deadline: true, status: true, ethAmount: true, contractAddress: true } },
     },
     orderBy: { createdAt: "desc" },
   })

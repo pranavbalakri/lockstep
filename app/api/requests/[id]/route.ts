@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { getAddress } from "viem"
 import { prisma } from "@/lib/db"
 import { getSessionFromRequest } from "@/lib/auth"
 import { deployEscrow, getServerWalletAddress } from "@/lib/escrow"
@@ -90,7 +91,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         const serverWallet = getServerWalletAddress()
         contractAddress = await deployEscrow(
           serverWallet,
-          freelancerWallet as `0x${string}`
+          getAddress(freelancerWallet)
         )
       } catch (err) {
         console.error("Escrow deploy failed:", err)
