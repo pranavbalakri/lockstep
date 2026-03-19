@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { getSessionFromRequest } from "@/lib/auth"
-import { deployEscrow } from "@/lib/escrow"
+import { deployEscrow, getServerWalletAddress } from "@/lib/escrow"
 import { usdToEth } from "@/lib/eth-price"
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -62,7 +62,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     where: { id },
     include: {
       gig: true,
-      client: { select: { walletAddress: true } },
     },
   })
   if (!request) return NextResponse.json({ error: "Not found" }, { status: 404 })
@@ -71,13 +70,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 
   if (action === "accept") {
-    // Deploy escrow contract if gig requires ETH deposit and both parties have wallet addresses
+    // Deploy escrow contract with server wallet as CLIENT (platform-custodial flow)
     let contractAddress: string | undefined
     const freelancer = await prisma.user.findUnique({
       where: { id: session.id },
       select: { walletAddress: true },
     })
-    const clientWallet = request.client.walletAddress
     const freelancerWallet = freelancer?.walletAddress
 
     // Refresh ETH amount at accept time so the rate is current
@@ -87,12 +85,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       if (!freelancerWallet) {
         return NextResponse.json({ error: "You must save an Ethereum wallet address before accepting this gig." }, { status: 400 })
       }
-      if (!clientWallet) {
-        return NextResponse.json({ error: "The client must save an Ethereum wallet address before their request can be accepted." }, { status: 400 })
-      }
       try {
+        // Use server wallet as CLIENT - platform handles deposits on behalf of clients
+        const serverWallet = getServerWalletAddress()
         contractAddress = await deployEscrow(
-          clientWallet as `0x${string}`,
+          serverWallet,
           freelancerWallet as `0x${string}`
         )
       } catch (err) {

@@ -7,78 +7,74 @@ datasource db {
   provider = "postgresql"
 }
 
-model User {
-  id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  password  String
-  role              String   @default("freelancer")
-  walletAddress     String?
-  bio               String?
-  profilePicture    String?
-  industry          String?
-  professionalTitle String?
-  skills            String   @default("[]")
-  workExperience    String   @default("[]")
-  education         String   @default("[]")
-  createdAt         DateTime @default(now())
-
-  gigs        Gig[]        @relation("FreelancerGigs")
-  requests    Request[]    @relation("ClientRequests")
-  submissions Submission[] @relation("FreelancerSubmissions")
-}
-
 model Gig {
-  id           String   @id @default(cuid())
-  freelancerId String
-  title        String
-  category     String
-  description  String
-  budget       Float
-  deadline     DateTime
-  skills       String   @default("[]")
-  deliverables String
-  status          String   @default("open")
-  ethAmount          Float?
+  id                 String       @id
+  freelancerId       String
+  title              String
+  category           String
+  description        String
+  budget             Float
+  deadline           DateTime
+  skills             String       @default("[]")
+  deliverables       String
+  status             String       @default("open")
   contractAddress    String?
+  createdAt          DateTime     @default(now())
+  ethAmount          Float?
   clientArgument     String?
   freelancerArgument String?
-  mediatorVerdict    String?
   mediatorReasoning  String?
+  mediatorVerdict    String?
   aiReviewData       String?
-  createdAt          DateTime @default(now())
-
-  freelancer User         @relation("FreelancerGigs", fields: [freelancerId], references: [id])
-  requests   Request[]
-  submissions Submission[]
+  User               User         @relation(fields: [freelancerId], references: [id])
+  Request            Request[]
+  Submission         Submission[]
 }
 
 model Request {
-  id               String   @id @default(cuid())
+  id               String   @id
   gigId            String
   clientId         String
   proposal         String
   proposedTimeline String
   status           String   @default("pending")
+  createdAt        DateTime @default(now())
   contractAddress  String?
   ethAmount        Float?
-  createdAt        DateTime @default(now())
-
-  gig    Gig  @relation(fields: [gigId], references: [id])
-  client User @relation("ClientRequests", fields: [clientId], references: [id])
+  User             User     @relation(fields: [clientId], references: [id])
+  Gig              Gig      @relation(fields: [gigId], references: [id])
 }
 
 model Submission {
-  id           String   @id @default(cuid())
+  id           String   @id
   gigId        String
   freelancerId String
-  version      Int      @default(1)
   textContent  String?
   url          String?
   filePaths    String   @default("[]")
   notes        String?
   createdAt    DateTime @default(now())
+  version      Int      @default(1)
+  User         User     @relation(fields: [freelancerId], references: [id])
+  Gig          Gig      @relation(fields: [gigId], references: [id])
+}
 
-  gig        Gig  @relation(fields: [gigId], references: [id])
-  freelancer User @relation("FreelancerSubmissions", fields: [freelancerId], references: [id])
+model User {
+  id                String       @id
+  name              String
+  email             String       @unique
+  password          String
+  role              String       @default("freelancer")
+  walletAddress     String?
+  createdAt         DateTime     @default(now())
+  bio               String?
+  education         String       @default("[]")
+  industry          String?
+  professionalTitle String?
+  profilePicture    String?
+  skills            String       @default("[]")
+  workExperience    String       @default("[]")
+  Gig               Gig[]
+  Request           Request[]
+  Submission        Submission[]
 }

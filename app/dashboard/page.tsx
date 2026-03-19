@@ -1,13 +1,16 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { formatDistanceToNow, format } from "date-fns"
+import { useWeb3Auth, useWeb3AuthConnect } from "@web3auth/modal/react"
+import { createWalletClient, custom, type EIP1193Provider } from "viem"
+import { sepolia } from "viem/chains"
 
-interface SessionUser { id: string; name: string; email: string; role: string; walletAddress?: string }
+interface SessionUser { id: string; name: string; email: string; role: string; walletAddress?: string | null }
 interface Gig { id: string; title: string; budget: number; status: string; requestCount: number; createdAt: string; deadline: string }
 interface Request {
   id: string
@@ -37,10 +40,11 @@ export default function DashboardPage() {
   const [gigs, setGigs] = useState<Gig[]>([])
   const [requests, setRequests] = useState<Request[]>([])
   const [loading, setLoading] = useState(true)
-  const [walletInput, setWalletInput] = useState("")
-  const [walletSaving, setWalletSaving] = useState(false)
-  const [walletMsg, setWalletMsg] = useState("")
   const [actionError, setActionError] = useState("")
+  const [pendingAcceptId, setPendingAcceptId] = useState<string | null>(null)
+  const pendingProcessed = useRef(false)
+  const { provider, isConnected } = useWeb3Auth()
+  const { connect } = useWeb3AuthConnect()
   const router = useRouter()
 
   const loadData = useCallback(async (u: SessionUser) => {
@@ -72,38 +76,38 @@ export default function DashboardPage() {
       })
   }, [router, loadData])
 
-  async function saveWallet() {
-    if (!/^0x[0-9a-fA-F]{40}$/.test(walletInput)) {
-      setWalletMsg("Invalid address format")
-      return
-    }
-    setWalletSaving(true)
-    const res = await fetch("/api/auth/me", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ walletAddress: walletInput }),
-    })
-    if (res.ok) {
-      setUser((u) => u ? { ...u, walletAddress: walletInput } : u)
-      setWalletMsg("Saved!")
-      setWalletInput("")
-    } else {
-      setWalletMsg("Failed to save")
-    }
-    setWalletSaving(false)
-  }
+  // When Web3Auth connects (after accept triggers connect()), save the wallet address
+  // and process the pending accept.
+  useEffect(() => {
+    if (!isConnected || !provider || !pendingAcceptId || pendingProcessed.current) return
+    pendingProcessed.current = true
+    ;(async () => {
+      try {
+        const wc = createWalletClient({ chain: sepolia, transport: custom(provider as EIP1193Provider) })
+        const [addr] = await wc.getAddresses()
+        if (addr && !user?.walletAddress) {
+          const res = await fetch("/api/auth/me", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ walletAddress: addr }),
+          })
+          if (res.ok) setUser((u) => u ? { ...u, walletAddress: addr } : u)
+        }
+        const id = pendingAcceptId
+        setPendingAcceptId(null)
+        await doAccept(id)
+      } finally {
+        pendingProcessed.current = false
+      }
+    })()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConnected, provider, pendingAcceptId])
 
-  async function handleRequestAction(requestId: string, action: "accept" | "reject") {
-    setActionError("")
-    if (action === "accept" && !user?.walletAddress) {
-      setWalletMsg("You must save an Ethereum wallet address before accepting a paid gig.")
-      window.scrollTo({ top: 0, behavior: "smooth" })
-      return
-    }
+  async function doAccept(requestId: string) {
     const res = await fetch(`/api/requests/${requestId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action }),
+      body: JSON.stringify({ action: "accept" }),
     })
     if (!res.ok) {
       const data = await res.json()
@@ -111,6 +115,31 @@ export default function DashboardPage() {
       return
     }
     if (user) loadData(user)
+  }
+
+  async function handleRequestAction(requestId: string, action: "accept" | "reject") {
+    setActionError("")
+    if (action === "accept" && !user?.walletAddress) {
+      // Connect embedded wallet to capture address before accepting
+      setPendingAcceptId(requestId)
+      connect()
+      return
+    }
+    if (action === "reject") {
+      const res = await fetch(`/api/requests/${requestId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        setActionError(data.error ?? "Action failed")
+        return
+      }
+      if (user) loadData(user)
+      return
+    }
+    await doAccept(requestId)
   }
 
   if (loading) {
@@ -136,30 +165,6 @@ export default function DashboardPage() {
           <p className="mt-1 text-sm text-muted-foreground">
             Welcome back, {user.name} · <span className="capitalize">{user.role}</span>
           </p>
-        </div>
-
-        {/* Wallet address banner */}
-        <div className="mb-8 rounded-xl border bg-card p-4">
-          <p className="mb-2 text-sm font-medium text-foreground">Ethereum wallet address</p>
-          {user.walletAddress ? (
-            <p className="font-mono text-sm text-muted-foreground break-all">{user.walletAddress}</p>
-          ) : (
-            <div className="flex items-center gap-2">
-              <input
-                value={walletInput}
-                onChange={(e) => { setWalletInput(e.target.value); setWalletMsg("") }}
-                placeholder="0x..."
-                className="h-9 flex-1 rounded-lg border bg-background px-3 font-mono text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary"
-              />
-              <Button size="sm" className="rounded-full" onClick={saveWallet} disabled={walletSaving}>
-                {walletSaving ? "Saving…" : "Save"}
-              </Button>
-              {walletMsg && <span className="text-xs text-muted-foreground">{walletMsg}</span>}
-            </div>
-          )}
-          {!user.walletAddress && (
-            <p className="mt-1.5 text-xs text-muted-foreground">Required to use ETH escrow on paid gigs.</p>
-          )}
         </div>
 
         {user.role === "client" ? (

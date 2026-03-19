@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { getSessionFromRequest } from "@/lib/auth"
-import { deployEscrow } from "@/lib/escrow"
+import { deployEscrow, getServerWalletAddress } from "@/lib/escrow"
 
 // Called by the freelancer to deploy the escrow contract when it was skipped at accept time
 // (i.e. the freelancer saved their wallet after accepting the request).
@@ -15,7 +15,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const gig = await prisma.gig.findUnique({
     where: { id },
     include: {
-      requests: { where: { status: "accepted" }, include: { client: { select: { walletAddress: true } } } },
+      requests: { where: { status: "accepted" } },
     },
   })
   if (!gig) return NextResponse.json({ error: "Not found" }, { status: 404 })
@@ -24,15 +24,15 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   if (gig.contractAddress) return NextResponse.json({ error: "Escrow already deployed" }, { status: 400 })
 
   const freelancer = await prisma.user.findUnique({ where: { id: session.id }, select: { walletAddress: true } })
-  const acceptedRequest = gig.requests[0]
-  const clientWallet = acceptedRequest?.client?.walletAddress
   const freelancerWallet = freelancer?.walletAddress
 
-  if (!clientWallet || !freelancerWallet) {
-    return NextResponse.json({ error: "Both parties must have a wallet address saved" }, { status: 400 })
+  if (!freelancerWallet) {
+    return NextResponse.json({ error: "You must save an Ethereum wallet address first" }, { status: 400 })
   }
 
-  const contractAddress = await deployEscrow(clientWallet as `0x${string}`, freelancerWallet as `0x${string}`)
+  // Use server wallet as CLIENT (platform-custodial flow)
+  const serverWallet = getServerWalletAddress()
+  const contractAddress = await deployEscrow(serverWallet, freelancerWallet as `0x${string}`)
 
   await prisma.gig.update({ where: { id }, data: { contractAddress } })
 

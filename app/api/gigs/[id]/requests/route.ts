@@ -42,23 +42,23 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "Proposal and timeline required" }, { status: 400 })
   }
 
-  const AI_BACKEND = process.env.AI_BACKEND_URL ?? "http://localhost:8000"
-  const validationRes = await fetch(`${AI_BACKEND}/api/validate-deliverables`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ description: proposal, deliverables: proposal, work_type: gig.category }),
-    signal: AbortSignal.timeout(30_000),
-  }).catch(() => null)
-  if (!validationRes || !validationRes.ok) {
-    return NextResponse.json({ error: "Could not validate your proposal. Make sure the AI backend is running." }, { status: 503 })
-  }
-  const validation = await validationRes.json()
-  if (!validation.valid) {
-    return NextResponse.json(
-      { error: "Your proposal needs more detail for the AI to fairly evaluate the work.", issues: validation.issues },
-      { status: 422 }
-    )
-  }
+  // const AI_BACKEND = process.env.AI_BACKEND_URL ?? "http://localhost:8000"
+  // const validationRes = await fetch(`${AI_BACKEND}/api/validate-deliverables`, {
+  //   method: "POST",
+  //   headers: { "Content-Type": "application/json" },
+  //   body: JSON.stringify({ description: proposal, deliverables: proposal, work_type: gig.category }),
+  //   signal: AbortSignal.timeout(30_000),
+  // }).catch(() => null)
+  // if (!validationRes || !validationRes.ok) {
+  //   return NextResponse.json({ error: "Could not validate your proposal. Make sure the AI backend is running." }, { status: 503 })
+  // }
+  // const validation = await validationRes.json()
+  // if (!validation.valid) {
+  //   return NextResponse.json(
+  //     { error: "Your proposal needs more detail for the AI to fairly evaluate the work.", issues: validation.issues },
+  //     { status: 422 }
+  //   )
+  // }
 
   const request = await prisma.request.create({
     data: {

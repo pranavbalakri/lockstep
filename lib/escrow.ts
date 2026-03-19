@@ -1,4 +1,4 @@
-import { createWalletClient, createPublicClient, http } from "viem"
+import { createWalletClient, createPublicClient, http, parseEther } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
 import { sepolia, anvil } from "viem/chains"
 import { DEADDROP_ABI, DEADDROP_BYTECODE } from "./contracts/DeadDrop"
@@ -56,4 +56,29 @@ export async function disputeEscrow(contractAddress: `0x${string}`): Promise<voi
     functionName: "dispute",
   })
   await publicClient.waitForTransactionReceipt({ hash })
+}
+
+/** Deposit ETH into escrow using the server wallet (platform-custodial flow). */
+export async function depositEscrow(
+  contractAddress: `0x${string}`,
+  ethAmount: number
+): Promise<string> {
+  const { walletClient, publicClient } = getClients()
+  const hash = await walletClient.writeContract({
+    address: contractAddress,
+    abi: DEADDROP_ABI,
+    functionName: "deposit",
+    value: parseEther(String(ethAmount)),
+  })
+  await publicClient.waitForTransactionReceipt({ hash })
+  return hash
+}
+
+/** Get the server wallet address (used as CLIENT in escrow contracts). */
+export function getServerWalletAddress(): `0x${string}` {
+  const privateKey = process.env.DEPLOYER_PRIVATE_KEY as `0x${string}`
+  if (!privateKey) {
+    throw new Error("DEPLOYER_PRIVATE_KEY must be set")
+  }
+  return privateKeyToAccount(privateKey).address
 }
