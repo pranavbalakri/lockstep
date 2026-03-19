@@ -53,7 +53,7 @@ async function main() {
     })
   }
 
-  const [alex, maya, riley, jordan, sam, taylor, casey] = await Promise.all([
+  const [alex, maya, riley, jordan, sam, taylor, casey, client, freelancer] = await Promise.all([
     createUser("Alex Chen", "alex@giggle.dev", "client", wallets.alex, {
       professionalTitle: "Co-Founder & CTO",
       industry: "SaaS / Fintech",
@@ -218,6 +218,32 @@ async function main() {
     createUser("Client Account", "client@giggle.dev", "client", wallets.client),
     createUser("Freelancer Account", "freelancer@giggle.dev", "freelancer", wallets.freelancer),
   ])
+
+  // Gig for the test freelancer account with an accepted request from test client
+  const testGig = await prisma.gig.create({
+    data: {
+      freelancerId: freelancer.id,
+      title: "Full-Stack Web Application Development",
+      category: "Development",
+      description: "I build complete web applications from scratch using modern technologies. Experienced with React, Node.js, PostgreSQL, and cloud deployment. I handle everything from database design to frontend polish.",
+      budget: 3000,
+      deadline: new Date("2026-04-30"),
+      skills: JSON.stringify(["React", "Node.js", "PostgreSQL", "TypeScript", "AWS"]),
+      deliverables: "Complete web application with user authentication, database integration, REST API, and deployment to AWS. Source code with documentation.",
+      status: "in_progress",
+    },
+  })
+
+  // Accepted request from test client for the test gig
+  await prisma.request.create({
+    data: {
+      gigId: testGig.id,
+      clientId: client.id,
+      proposal: "I need a web app to manage inventory for my small business. Should have user login, product catalog, and basic reporting. I have wireframes ready to share.",
+      proposedTimeline: "3 weeks",
+      status: "accepted",
+    },
+  })
 
   const gigDefinitions = [
     {

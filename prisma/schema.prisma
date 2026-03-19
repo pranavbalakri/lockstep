@@ -8,7 +8,7 @@ datasource db {
 }
 
 model Gig {
-  id                 String       @id
+  id                 String       @id @default(cuid())
   freelancerId       String
   title              String
   category           String
@@ -26,13 +26,13 @@ model Gig {
   mediatorReasoning  String?
   mediatorVerdict    String?
   aiReviewData       String?
-  User               User         @relation(fields: [freelancerId], references: [id])
-  Request            Request[]
-  Submission         Submission[]
+  freelancer         User         @relation(fields: [freelancerId], references: [id])
+  requests           Request[]
+  submissions        Submission[]
 }
 
 model Request {
-  id               String   @id
+  id               String   @id @default(cuid())
   gigId            String
   clientId         String
   proposal         String
@@ -41,12 +41,12 @@ model Request {
   createdAt        DateTime @default(now())
   contractAddress  String?
   ethAmount        Float?
-  User             User     @relation(fields: [clientId], references: [id])
-  Gig              Gig      @relation(fields: [gigId], references: [id])
+  client           User     @relation(fields: [clientId], references: [id])
+  gig              Gig      @relation(fields: [gigId], references: [id])
 }
 
 model Submission {
-  id           String   @id
+  id           String   @id @default(cuid())
   gigId        String
   freelancerId String
   textContent  String?
@@ -55,12 +55,12 @@ model Submission {
   notes        String?
   createdAt    DateTime @default(now())
   version      Int      @default(1)
-  User         User     @relation(fields: [freelancerId], references: [id])
-  Gig          Gig      @relation(fields: [gigId], references: [id])
+  freelancer   User     @relation(fields: [freelancerId], references: [id])
+  gig          Gig      @relation(fields: [gigId], references: [id])
 }
 
 model User {
-  id                String       @id
+  id                String       @id @default(cuid())
   name              String
   email             String       @unique
   password          String
@@ -74,7 +74,7 @@ model User {
   profilePicture    String?
   skills            String       @default("[]")
   workExperience    String       @default("[]")
-  Gig               Gig[]
-  Request           Request[]
-  Submission        Submission[]
+  gigs              Gig[]
+  requests          Request[]
+  submissions       Submission[]
 }
