@@ -9,7 +9,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     include: {
       freelancer: { select: { id: true, name: true, bio: true, professionalTitle: true, industry: true, skills: true, workExperience: true, education: true } },
       requests: { select: { id: true, clientId: true, status: true, contractAddress: true, ethAmount: true } },
-      submission: true,
+      submissions: { orderBy: { version: "desc" as const } },
     },
   })
 
@@ -20,6 +20,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       ...gig,
       skills: JSON.parse(gig.skills),
       requestCount: gig.requests.length,
+      submission: gig.submissions[0] ?? null,
+      submissionCount: gig.submissions.length,
       freelancer: {
         ...gig.freelancer,
         skills: JSON.parse(gig.freelancer.skills ?? "[]"),

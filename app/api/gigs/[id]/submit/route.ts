@@ -16,8 +16,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   })
   if (!gig) return NextResponse.json({ error: "Not found" }, { status: 404 })
   if (gig.freelancerId !== session.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-  if (gig.status !== "in_progress") {
-    return NextResponse.json({ error: "Gig is not in progress" }, { status: 400 })
+  if (gig.status !== "in_progress" && gig.status !== "submitted") {
+    return NextResponse.json({ error: "Gig is not in a submittable state" }, { status: 400 })
   }
   if (gig.ethAmount && gig.ethAmount > 0 && !gig.requests[0]?.ethAmount) {
     return NextResponse.json({ error: "Client must deposit ETH escrow before you can submit" }, { status: 400 })
@@ -25,12 +25,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   const { textContent, url, notes } = await req.json()
 
-  await prisma.submission.upsert({
-    where: { gigId: id },
-    update: { textContent: textContent ?? null, url: url ?? null, notes: notes ?? null },
-    create: {
+  const existingCount = await prisma.submission.count({ where: { gigId: id } })
+  await prisma.submission.create({
+    data: {
       gigId: id,
       freelancerId: session.id,
+      version: existingCount + 1,
       textContent: textContent ?? null,
       url: url ?? null,
       filePaths: "[]",

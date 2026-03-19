@@ -7,8 +7,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const session = await getSessionFromRequest(req)
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  const submission = await prisma.submission.findUnique({
+  const submission = await prisma.submission.findFirst({
     where: { gigId: id },
+    orderBy: { version: "desc" },
     include: { freelancer: { select: { id: true, name: true } } },
   })
 

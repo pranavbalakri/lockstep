@@ -14,6 +14,7 @@ interface GigData {
   ethAmount?: number | null
   contractAddress?: string | null
   requests: { status: string; ethAmount?: number | null }[]
+  submissionCount?: number
 }
 
 interface ReviewResult {
@@ -84,16 +85,23 @@ export default function SubmitPage({ params }: { params: Promise<{ id: string }>
     Promise.all([
       fetch(`/api/gigs/${id}`).then((r) => r.ok ? r.json() : null),
       fetch("/api/auth/me").then((r) => r.ok ? r.json() : null),
-    ]).then(([gigData, meData]) => {
+      fetch(`/api/gigs/${id}/submission`).then((r) => r.ok ? r.json() : null),
+    ]).then(([gigData, meData, submissionData]) => {
       if (!meData?.user) { router.push(`/login?redirect=/gig/${id}/submit`); return }
       if (meData.user.role !== "freelancer") { router.push(`/gig/${id}`); return }
 
       if (!gigData?.gig) { router.push("/gigs"); return }
-      if (gigData.gig.freelancer?.id !== meData.user.id || gigData.gig.status !== "in_progress") {
+      const isSubmittable = gigData.gig.status === "in_progress" || gigData.gig.status === "submitted"
+      if (gigData.gig.freelancer?.id !== meData.user.id || !isSubmittable) {
         router.push(`/gig/${id}`)
         return
       }
       setGig(gigData.gig)
+      if (submissionData?.submission) {
+        setTextContent(submissionData.submission.textContent ?? "")
+        setUrl(submissionData.submission.url ?? "")
+        setNotes(submissionData.submission.notes ?? "")
+      }
       setLoading(false)
     })
   }, [id, router])
@@ -199,13 +207,18 @@ export default function SubmitPage({ params }: { params: Promise<{ id: string }>
           <p className="mb-6 text-sm text-muted-foreground">
             {isPassed
               ? "Your submission looks good. The client will review the AI findings and release payment."
-              : "The client will review the AI findings and decide whether to accept or dispute."}
+              : "The client will review the AI findings and decide whether to accept, dispute, or you can resubmit with revisions."}
           </p>
           <div className="flex items-center gap-3">
             <Button asChild className="rounded-full px-6">
               <Link href={`/gig/${id}`}>View gig</Link>
             </Button>
-            <Button asChild variant="outline" className="rounded-full px-6">
+            {!isPassed && (
+              <Button variant="outline" className="rounded-full px-6" onClick={() => setReview(null)}>
+                Revise & Resubmit
+              </Button>
+            )}
+            <Button asChild variant="ghost" className="rounded-full px-6">
               <Link href="/dashboard">Dashboard</Link>
             </Button>
           </div>
@@ -219,9 +232,21 @@ export default function SubmitPage({ params }: { params: Promise<{ id: string }>
       <Header />
       <div className="mx-auto max-w-2xl px-6 py-12">
         <div className="mb-8">
-          <h1 className="font-serif text-3xl font-normal text-foreground">Submit Deliverable</h1>
+          <h1 className="font-serif text-3xl font-normal text-foreground">
+            {gig.submissionCount ? "Resubmit Deliverable" : "Submit Deliverable"}
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">{gig.title}</p>
         </div>
+
+        {gig.submissionCount ? (
+          <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50 p-4">
+            <p className="text-sm text-blue-800">
+              You have submitted {gig.submissionCount} time{gig.submissionCount !== 1 ? "s" : ""} previously.
+              This will be revision <span className="font-semibold">#{gig.submissionCount + 1}</span>.
+              Previous submissions are kept for reference.
+            </p>
+          </div>
+        ) : null}
 
         <div className="mb-6 rounded-xl border bg-secondary/40 p-4">
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-1">Expected deliverables</p>

@@ -50,7 +50,7 @@ model Gig {
 
   freelancer User         @relation("FreelancerGigs", fields: [freelancerId], references: [id])
   requests   Request[]
-  submission Submission?
+  submissions Submission[]
 }
 
 model Request {
@@ -70,8 +70,9 @@ model Request {
 
 model Submission {
   id           String   @id @default(cuid())
-  gigId        String   @unique
+  gigId        String
   freelancerId String
+  version      Int      @default(1)
   textContent  String?
   url          String?
   filePaths    String   @default("[]")

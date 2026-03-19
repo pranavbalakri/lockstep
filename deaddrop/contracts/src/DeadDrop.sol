@@ -18,6 +18,8 @@ contract DeadDrop {
 
     address public immutable CLIENT;
     address public immutable FREELANCER;
+    /// @notice Off-chain AI arbiter — set to the deployer at construction time.
+    address public immutable ARBITER;
     uint256 public depositedAmount;
     EscrowState public state;
 
@@ -32,6 +34,7 @@ contract DeadDrop {
 
         CLIENT = _client;
         FREELANCER = _freelancer;
+        ARBITER = msg.sender;
         state = EscrowState.Unfunded;
     }
 
@@ -46,8 +49,10 @@ contract DeadDrop {
         emit Deposited(msg.sender, msg.value);
     }
 
+    /// @notice Release escrowed ETH to the freelancer.
+    ///         Callable by CLIENT (voluntary) or ARBITER (AI verdict: work complete).
     function release() external {
-        if (msg.sender != CLIENT) revert OnlyClient();
+        if (msg.sender != CLIENT && msg.sender != ARBITER) revert OnlyClient();
         if (state != EscrowState.Funded) revert InvalidState();
 
         uint256 amount = depositedAmount;
@@ -60,11 +65,18 @@ contract DeadDrop {
         emit Released(FREELANCER, amount);
     }
 
+    /// @notice Refund escrowed ETH to the client.
+    ///         Callable by ARBITER only (AI verdict: work incomplete).
     function dispute() external {
-        if (msg.sender != CLIENT && msg.sender != FREELANCER) revert OnlyParticipant();
+        if (msg.sender != ARBITER) revert OnlyParticipant();
         if (state != EscrowState.Funded) revert InvalidState();
 
+        uint256 amount = depositedAmount;
+        depositedAmount = 0;
         state = EscrowState.Disputed;
+
+        (bool success,) = payable(CLIENT).call{value: amount}("");
+        if (!success) revert TransferFailed();
 
         emit Disputed(msg.sender);
     }

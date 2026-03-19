@@ -66,7 +66,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   const gig = await prisma.gig.findUnique({
     where: { id },
-    include: { submission: true },
+    include: { submissions: { orderBy: { version: "desc" as const }, take: 1 } },
   })
   if (!gig) return NextResponse.json({ error: "Not found" }, { status: 404 })
   if (gig.status !== "disputed") {
@@ -100,7 +100,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   // If both parties have argued, run mediator and resolve
   if (clientArg && freelancerArg) {
-    if (!gig.submission) {
+    const latestSubmission = gig.submissions[0]
+    if (!latestSubmission) {
       return NextResponse.json({ error: "No submission found" }, { status: 400 })
     }
 
@@ -113,7 +114,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           clientArgument: clientArg,
           freelancerArgument: freelancerArg,
         },
-        { textContent: gig.submission.textContent, url: gig.submission.url }
+        { textContent: latestSubmission.textContent, url: latestSubmission.url }
       )
 
       // Freelancer gets >= 50% → release; otherwise → refund client
@@ -167,9 +168,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       description: true,
       deliverables: true,
       freelancerId: true,
-      submission: { select: { textContent: true, url: true, notes: true } },
+      submissions: { select: { textContent: true, url: true, notes: true, version: true }, orderBy: { version: "desc" as const }, take: 1 },
     },
   })
   if (!gig) return NextResponse.json({ error: "Not found" }, { status: 404 })
-  return NextResponse.json({ gig })
+  const { submissions, ...gigRest } = gig
+  return NextResponse.json({ gig: { ...gigRest, submission: submissions[0] ?? null } })
 }

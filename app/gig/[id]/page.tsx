@@ -55,6 +55,7 @@ interface GigData {
     notes?: string
     filePaths: string
   }
+  submissionCount?: number
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -281,7 +282,7 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
   const isFreelancer = user?.id === gig.freelancer.id
   const isClient = user?.role === "client"
   const myRequest = gig.requests?.find((r) => r.clientId === user?.id)
-  const canSubmit = isFreelancer && gig.status === "in_progress"
+  const canSubmit = isFreelancer && (gig.status === "in_progress" || gig.status === "submitted")
   // Show deposit form when: client accepted, contract deployed, ETH required, not yet deposited
   const needsFunding = isClient && gig.status === "in_progress" && !!gig.contractAddress && !!gig.ethAmount && !myRequest?.ethAmount && !depositDone
 
@@ -600,7 +601,9 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
 
               {canSubmit && (
                 <Button asChild className="w-full rounded-full">
-                  <Link href={`/gig/${id}/submit`}>Submit Deliverable</Link>
+                  <Link href={`/gig/${id}/submit`}>
+                    {gig.status === "submitted" ? "Resubmit Deliverable" : "Submit Deliverable"}
+                  </Link>
                 </Button>
               )}
 
