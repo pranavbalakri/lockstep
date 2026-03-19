@@ -1,7 +1,7 @@
 from __future__ import annotations
 from models import (
     ScopeParserOutput, AnalyzerOutput, VerdictOutput, MediatorOutput,
-    Criterion, CriterionResult, DeliverablesValidationOutput
+    Criterion, CriterionResult, DeliverablesValidationOutput, FileInfo
 )
 from agents.scope_parser import parse_scope
 from agents.deliverable_analyzer import analyze_deliverable
@@ -22,9 +22,10 @@ async def run_evaluation(
     deliverable_text: str,
     deliverable_url: str | None,
     criteria: list[Criterion],
-    work_type: str
+    work_type: str,
+    files: list[FileInfo] | None = None
 ) -> tuple[AnalyzerOutput, VerdictOutput]:
-    analyzer_output = await analyze_deliverable(deliverable_text, deliverable_url, criteria, work_type)
+    analyzer_output = await analyze_deliverable(deliverable_text, deliverable_url, criteria, work_type, files)
     verdict = await render_verdict(analyzer_output.evaluations)
     return analyzer_output, verdict
 

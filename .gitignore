@@ -5,3 +5,4 @@ node_modules
 backend/.env
 /lib/generated/prisma
 deposit_anvil.sh
+/uploads/

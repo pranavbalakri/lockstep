@@ -589,6 +589,35 @@ async function main() {
   ]
 
   await prisma.request.createMany({ data: requests })
+
+  // Create two gigs for the test freelancer account
+  await prisma.gig.create({
+    data: {
+      freelancerId: freelancer.id,
+      title: "Professional Resume Design & Writing",
+      category: "Writing",
+      description: "I craft polished, ATS-friendly resumes that get past the bots and impress hiring managers. I combine clean visual design with strong copy that highlights your impact. 200+ resumes delivered for tech professionals from entry-level to VP.",
+      budget: 350,
+      deadline: new Date("2026-04-10"),
+      skills: JSON.stringify(["Resume Writing", "Career Coaching", "Figma", "Copywriting"]),
+      deliverables: "One professionally designed resume in PDF and editable Figma format. Includes 2 rounds of revisions, ATS compatibility check, and a 30-minute review call.",
+      status: "open",
+    },
+  })
+
+  await prisma.gig.create({
+    data: {
+      freelancerId: freelancer.id,
+      title: "Realistic Duck Photography",
+      category: "Design",
+      description: "I capture stunning, lifelike photographs of ducks in their natural habitats. Whether you need wildlife photography for editorial, stock images, or personal projects, I deliver high-resolution images with beautiful composition and lighting.",
+      budget: 200,
+      deadline: new Date("2026-04-15"),
+      skills: JSON.stringify(["Photography", "Wildlife", "Photo Editing", "Lightroom"]),
+      deliverables: "5 high-resolution duck photographs (minimum 4000x3000px) in RAW and edited JPEG formats. Includes basic retouching and color grading.",
+      status: "open",
+    },
+  })
 }
 
 main()

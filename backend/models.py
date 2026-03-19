@@ -4,6 +4,13 @@ from typing import Optional
 from enum import Enum
 
 
+class FileInfo(BaseModel):
+    filename: str
+    mimeType: str
+    fileType: str  # "image" | "document" | "code" | "other"
+    base64: str
+
+
 class Criterion(BaseModel):
     id: str
     label: str

@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from typing import Optional
 from models import (
     ScopeParserOutput, Criterion, CriterionResult,
-    VerdictOutput, MediatorOutput, AnalyzerOutput, DeliverablesValidationOutput
+    VerdictOutput, MediatorOutput, AnalyzerOutput, DeliverablesValidationOutput, FileInfo
 )
 from pipeline import run_scope_parsing, run_evaluation, run_mediation, run_deliverables_validation
 import config
@@ -28,6 +28,7 @@ class EvaluateRequest(BaseModel):
     deliverable_url: Optional[str] = None
     criteria: list[Criterion]
     work_type: str
+    files: list[FileInfo] = []
 
 
 class EvaluateResponse(BaseModel):
@@ -65,7 +66,7 @@ async def parse_scope_endpoint(req: ParseScopeRequest):
 async def evaluate_endpoint(req: EvaluateRequest):
     try:
         analyzer_output, verdict = await run_evaluation(
-            req.deliverable_text, req.deliverable_url, req.criteria, req.work_type
+            req.deliverable_text, req.deliverable_url, req.criteria, req.work_type, req.files
         )
         return EvaluateResponse(evaluations=analyzer_output.evaluations, verdict=verdict)
     except Exception as e:

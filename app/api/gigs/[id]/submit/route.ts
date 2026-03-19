@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { getSessionFromRequest } from "@/lib/auth"
 import { runAiReview } from "@/lib/ai-review"
+import { readFile } from "@/lib/storage"
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -23,10 +24,40 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "Client must deposit ETH escrow before you can submit" }, { status: 400 })
   }
 
-  const { textContent, url, notes } = await req.json()
+  const { textContent, url, notes, fileIds } = await req.json()
+
+  interface SubmissionFileData {
+    id: string
+    filename: string
+    mimeType: string
+    fileType: string
+    storagePath: string
+  }
+
+  // Validate and fetch files if provided
+  let files: SubmissionFileData[] = []
+  if (fileIds && Array.isArray(fileIds) && fileIds.length > 0) {
+    const submissionFiles = await prisma.submissionFile.findMany({
+      where: {
+        id: { in: fileIds as string[] },
+        gigId: id,
+        submissionId: null,
+      },
+    })
+    if (submissionFiles.length !== fileIds.length) {
+      return NextResponse.json({ error: "One or more files not found or already submitted" }, { status: 400 })
+    }
+    files = submissionFiles.map((f): SubmissionFileData => ({
+      id: f.id,
+      filename: f.filename,
+      mimeType: f.mimeType,
+      fileType: f.fileType,
+      storagePath: f.storagePath,
+    }))
+  }
 
   const existingCount = await prisma.submission.count({ where: { gigId: id } })
-  await prisma.submission.create({
+  const submission = await prisma.submission.create({
     data: {
       gigId: id,
       freelancerId: session.id,
@@ -38,10 +69,31 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     },
   })
 
+  // Link files to submission
+  if (files.length > 0) {
+    await prisma.submissionFile.updateMany({
+      where: { id: { in: files.map(f => f.id) } },
+      data: { submissionId: submission.id },
+    })
+  }
+
   try {
+    // Prepare file data for AI review
+    const filesForReview = await Promise.all(
+      files.map(async (f) => {
+        const buffer = await readFile(f.storagePath)
+        return {
+          filename: f.filename,
+          mimeType: f.mimeType,
+          fileType: f.fileType,
+          base64: buffer.toString("base64"),
+        }
+      })
+    )
+
     const review = await runAiReview(
       { description: gig.description, deliverables: gig.deliverables, category: gig.category },
-      { textContent: textContent ?? null, url: url ?? null }
+      { textContent: textContent ?? null, url: url ?? null, files: filesForReview }
     )
 
     await prisma.gig.update({

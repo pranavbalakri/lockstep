@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
+import { FileUpload, UploadedFile } from "@/components/file-upload"
 
 interface GigData {
   id: string
@@ -75,6 +76,7 @@ export default function SubmitPage({ params }: { params: Promise<{ id: string }>
   const [textContent, setTextContent] = useState("")
   const [url, setUrl] = useState("")
   const [notes, setNotes] = useState("")
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
   const [error, setError] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [reviewStep, setReviewStep] = useState(0)
@@ -109,8 +111,8 @@ export default function SubmitPage({ params }: { params: Promise<{ id: string }>
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError("")
-    if (!textContent && !url) {
-      setError("Please provide either written content or a link to your work.")
+    if (!textContent && !url && uploadedFiles.length === 0) {
+      setError("Please provide written content, a link, or upload files.")
       return
     }
     setSubmitting(true)
@@ -121,7 +123,12 @@ export default function SubmitPage({ params }: { params: Promise<{ id: string }>
     const res = await fetch(`/api/gigs/${id}/submit`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ textContent: textContent || null, url: url || null, notes: notes || null }),
+      body: JSON.stringify({
+        textContent: textContent || null,
+        url: url || null,
+        notes: notes || null,
+        fileIds: uploadedFiles.map((f) => f.fileId),
+      }),
     })
     clearTimeout(t1); clearTimeout(t2)
     const data = await res.json()
@@ -276,6 +283,17 @@ export default function SubmitPage({ params }: { params: Promise<{ id: string }>
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder="https://github.com/you/project"
                 className="h-10 rounded-lg border bg-background px-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium text-foreground">Files</label>
+              <p className="text-xs text-muted-foreground">Upload images, PDFs, code files, or other deliverables.</p>
+              <FileUpload
+                gigId={id}
+                files={uploadedFiles}
+                onFilesChange={setUploadedFiles}
+                disabled={submitting}
               />
             </div>
 

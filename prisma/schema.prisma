@@ -46,17 +46,34 @@ model Request {
 }
 
 model Submission {
-  id           String   @id @default(cuid())
+  id           String           @id @default(cuid())
   gigId        String
   freelancerId String
   textContent  String?
   url          String?
-  filePaths    String   @default("[]")
+  filePaths    String           @default("[]")
   notes        String?
-  createdAt    DateTime @default(now())
-  version      Int      @default(1)
-  freelancer   User     @relation(fields: [freelancerId], references: [id])
-  gig          Gig      @relation(fields: [gigId], references: [id])
+  createdAt    DateTime         @default(now())
+  version      Int              @default(1)
+  freelancer   User             @relation(fields: [freelancerId], references: [id])
+  gig          Gig              @relation(fields: [gigId], references: [id])
+  files        SubmissionFile[]
+}
+
+model SubmissionFile {
+  id           String     @id @default(cuid())
+  submissionId String?
+  gigId        String
+  filename     String
+  storagePath  String
+  mimeType     String
+  sizeBytes    Int
+  fileType     String     // "image" | "document" | "code" | "other"
+  createdAt    DateTime   @default(now())
+  submission   Submission? @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@index([submissionId])
+  @@index([gigId])
 }
 
 model User {

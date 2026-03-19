@@ -6,9 +6,17 @@ interface AiReviewGigInput {
   category: string
 }
 
+interface FileInput {
+  filename: string
+  mimeType: string
+  fileType: string
+  base64: string
+}
+
 interface AiReviewSubmissionInput {
   textContent?: string | null
   url?: string | null
+  files?: FileInput[]
 }
 
 interface Criterion {
@@ -67,6 +75,7 @@ export async function runAiReview(
       deliverable_url: submission.url ?? null,
       criteria: scope.criteria,
       work_type: gig.category,
+      files: submission.files ?? [],
     }),
     signal: AbortSignal.timeout(60_000),
   })
