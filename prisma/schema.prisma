@@ -26,23 +26,34 @@ model Gig {
   mediatorReasoning  String?
   mediatorVerdict    String?
   aiReviewData       String?
+  paymentMode        String       @default("custodial")
+  clientWallet       String?
   freelancer         User         @relation(fields: [freelancerId], references: [id])
   requests           Request[]
   submissions        Submission[]
 }
 
 model Request {
-  id               String   @id @default(cuid())
-  gigId            String
-  clientId         String
-  proposal         String
-  proposedTimeline String
-  status           String   @default("pending")
-  createdAt        DateTime @default(now())
-  contractAddress  String?
-  ethAmount        Float?
-  client           User     @relation(fields: [clientId], references: [id])
-  gig              Gig      @relation(fields: [gigId], references: [id])
+  id                   String   @id @default(cuid())
+  gigId                String
+  clientId             String
+  proposal             String
+  proposedTimeline     String
+  status               String   @default("pending")
+  createdAt            DateTime @default(now())
+  contractAddress      String?
+  ethAmount            Float?
+  paymentStatus        String?
+  paymentSessionId     String?  @unique
+  moonpayTransactionId String?
+  paymentTxHash        String?
+  expectedEthAmount    String?
+  receivedEthAmount    String?
+  slippagePercent      Float?
+  depositRetryCount    Int      @default(0)
+  paymentFailureReason String?
+  client               User     @relation(fields: [clientId], references: [id])
+  gig                  Gig      @relation(fields: [gigId], references: [id])
 }
 
 model Submission {

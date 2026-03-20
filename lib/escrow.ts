@@ -82,3 +82,66 @@ export function getServerWalletAddress(): `0x${string}` {
   }
   return privateKeyToAccount(privateKey).address
 }
+
+/**
+ * Escrow state enum values from the DeadDrop contract.
+ */
+export const EscrowState = {
+  Unfunded: 0,
+  Funded: 1,
+  Released: 2,
+  Disputed: 3,
+} as const
+
+export type EscrowStateType = (typeof EscrowState)[keyof typeof EscrowState]
+
+/**
+ * Read the current state of an escrow contract.
+ * Returns: 0 = Unfunded, 1 = Funded, 2 = Released, 3 = Disputed
+ */
+export async function getEscrowState(
+  contractAddress: `0x${string}`
+): Promise<EscrowStateType> {
+  const { publicClient } = getClients()
+  const state = await publicClient.readContract({
+    address: contractAddress,
+    abi: DEADDROP_ABI,
+    functionName: "state",
+  })
+  return state as EscrowStateType
+}
+
+/**
+ * Read the deposited amount from an escrow contract.
+ * Returns the amount in wei as a bigint.
+ */
+export async function getDepositedAmount(
+  contractAddress: `0x${string}`
+): Promise<bigint> {
+  const { publicClient } = getClients()
+  const amount = await publicClient.readContract({
+    address: contractAddress,
+    abi: DEADDROP_ABI,
+    functionName: "depositedAmount",
+  })
+  return amount as bigint
+}
+
+/**
+ * Deposit ETH to an escrow contract with a specific wei amount.
+ * Used by webhook handler after receiving ETH from MoonPay.
+ */
+export async function depositToEscrowWei(
+  contractAddress: `0x${string}`,
+  amountWei: bigint
+): Promise<string> {
+  const { walletClient, publicClient } = getClients()
+  const hash = await walletClient.writeContract({
+    address: contractAddress,
+    abi: DEADDROP_ABI,
+    functionName: "deposit",
+    value: amountWei,
+  })
+  await publicClient.waitForTransactionReceipt({ hash })
+  return hash
+}

@@ -1,10 +1,11 @@
 "use client"
 
-import { useState, useEffect, use } from "react"
+import { useState, useEffect, use, useCallback } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
+import { Loader2 } from "lucide-react"
 
 interface GigData {
   id: string
@@ -13,17 +14,24 @@ interface GigData {
   ethAmount?: number | null
   contractAddress?: string | null
   status: string
-  requests: { clientId: string; status: string; ethAmount?: number | null }[]
+  requests: {
+    id: string
+    clientId: string
+    status: string
+    ethAmount?: number | null
+    paymentStatus?: string | null
+  }[]
 }
+
+type PaymentState = "idle" | "opening" | "processing" | "success" | "error"
 
 export default function PayPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const [gig, setGig] = useState<GigData | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const [paying, setPaying] = useState(false)
+  const [paymentState, setPaymentState] = useState<PaymentState>("idle")
   const [error, setError] = useState("")
-  const [success, setSuccess] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -41,17 +49,94 @@ export default function PayPage({ params }: { params: Promise<{ id: string }> })
     })
   }, [id, router])
 
-  async function handlePay() {
-    setError("")
-    setPaying(true)
-    const res = await fetch(`/api/gigs/${id}/pay`, { method: "POST" })
-    const data = await res.json()
-    if (res.ok) {
-      setSuccess(true)
-    } else {
-      setError(data.error ?? "Payment failed")
+  const myRequest = gig?.requests.find(r => r.clientId === userId && r.status === "accepted")
+
+  const pollPaymentStatus = useCallback(async (requestId: string, maxAttempts = 60): Promise<{ success: boolean; ethAmount?: number; error?: string }> => {
+    for (let i = 0; i < maxAttempts; i++) {
+      try {
+        const res = await fetch(`/api/requests/${requestId}/payment-status`)
+        if (!res.ok) {
+          await new Promise(r => setTimeout(r, 3000))
+          continue
+        }
+        const data = await res.json()
+
+        if (data.paymentStatus === "funded") {
+          return { success: true, ethAmount: data.ethAmount }
+        }
+        if (data.paymentStatus === "failed") {
+          return { success: false, error: data.failureReason || "Payment failed" }
+        }
+        if (data.paymentStatus === "deposit_failed" || data.paymentStatus === "requires_manual_review") {
+          return { success: false, error: "Payment received but deposit pending. Please contact support." }
+        }
+      } catch {
+        // Ignore fetch errors, keep polling
+      }
+      await new Promise(r => setTimeout(r, 3000)) // 3s interval
     }
-    setPaying(false)
+    return { success: false, error: "Timeout waiting for payment confirmation" }
+  }, [])
+
+  async function handlePay() {
+    if (!myRequest) return
+    setError("")
+    setPaymentState("opening")
+
+    try {
+      // Get payment session
+      const res = await fetch(`/api/gigs/${id}/payment-session`, { method: "POST" })
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data.error ?? "Failed to start payment")
+        setPaymentState("error")
+        return
+      }
+
+      // Dev mode: direct deposit without MoonPay
+      if (data.mode === "dev") {
+        setPaymentState("processing")
+        const payRes = await fetch(`/api/gigs/${id}/pay`, { method: "POST" })
+        const payData = await payRes.json()
+
+        if (payRes.ok) {
+          setPaymentState("success")
+        } else {
+          setError(payData.error || "Payment failed")
+          setPaymentState("error")
+        }
+        return
+      }
+
+      // Production: MoonPay widget
+      const moonpayWindow = window.open(data.widgetUrl, "MoonPay", "width=500,height=700")
+
+      setPaymentState("processing")
+
+      // Start polling for payment status
+      const result = await pollPaymentStatus(myRequest.id)
+
+      // Close MoonPay window if still open
+      if (moonpayWindow && !moonpayWindow.closed) {
+        moonpayWindow.close()
+      }
+
+      if (result.success) {
+        setPaymentState("success")
+      } else {
+        setError(result.error || "Payment failed")
+        setPaymentState("error")
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Payment failed")
+      setPaymentState("error")
+    }
+  }
+
+  function handleRetry() {
+    setPaymentState("idle")
+    setError("")
   }
 
   if (loading) {
@@ -67,10 +152,9 @@ export default function PayPage({ params }: { params: Promise<{ id: string }> })
 
   if (!gig) return null
 
-  const myRequest = gig.requests.find(r => r.clientId === userId && r.status === "accepted")
   const alreadyPaid = !!myRequest?.ethAmount
 
-  if (alreadyPaid) {
+  if (alreadyPaid || paymentState === "success") {
     return (
       <main className="min-h-screen bg-background">
         <Header />
@@ -113,24 +197,23 @@ export default function PayPage({ params }: { params: Promise<{ id: string }> })
     )
   }
 
-  if (success) {
+  if (paymentState === "processing") {
     return (
       <main className="min-h-screen bg-background">
         <Header />
         <div className="mx-auto max-w-md px-6 py-12">
-          <div className="rounded-xl border border-green-200 bg-green-50 p-6 text-center">
-            <div className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-              <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-              </svg>
+          <div className="rounded-xl border bg-card p-6 text-center shadow-sm">
+            <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
             </div>
-            <h1 className="font-serif text-xl font-medium text-foreground mb-2">Payment Successful</h1>
-            <p className="text-sm text-green-800 mb-4">
-              Your payment of <span className="font-semibold">${gig.budget.toLocaleString()}</span> has been processed. The escrow is now funded.
+            <h1 className="font-serif text-xl font-medium text-foreground mb-2">Processing Payment</h1>
+            <p className="text-sm text-muted-foreground mb-4">
+              Complete your purchase in the MoonPay window. This page will update automatically when your payment is confirmed.
             </p>
-            <Button asChild className="rounded-full px-6">
-              <Link href={`/gig/${id}`}>View Gig</Link>
-            </Button>
+            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              <div className="h-2 w-2 animate-pulse rounded-full bg-amber-400" />
+              Waiting for confirmation...
+            </div>
           </div>
         </div>
       </main>
@@ -152,7 +235,7 @@ export default function PayPage({ params }: { params: Promise<{ id: string }> })
             <p className="mt-1 font-serif text-3xl font-normal text-foreground">${gig.budget.toLocaleString()}</p>
             {gig.ethAmount && (
               <p className="mt-1 text-sm text-muted-foreground">
-                Equivalent to <span className="font-medium">Ξ {gig.ethAmount} ETH</span> at current rates
+                Equivalent to <span className="font-medium">Ξ {gig.ethAmount.toFixed(4)} ETH</span> at current rates
               </p>
             )}
           </div>
@@ -164,16 +247,33 @@ export default function PayPage({ params }: { params: Promise<{ id: string }> })
           </div>
 
           {error && (
-            <p className="mb-4 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
+            <div className="mb-4 rounded-lg bg-destructive/10 px-3 py-2">
+              <p className="text-sm text-destructive">{error}</p>
+              {paymentState === "error" && (
+                <button
+                  onClick={handleRetry}
+                  className="mt-1 text-xs text-destructive underline hover:no-underline"
+                >
+                  Try again
+                </button>
+              )}
+            </div>
           )}
 
           <Button
             className="w-full rounded-full"
             size="lg"
             onClick={handlePay}
-            disabled={paying}
+            disabled={paymentState === "opening" || paymentState === "processing"}
           >
-            {paying ? "Processing…" : `Pay $${gig.budget.toLocaleString()}`}
+            {paymentState === "opening" || paymentState === "processing" ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              `Pay $${gig.budget.toLocaleString()}`
+            )}
           </Button>
 
           <p className="mt-4 text-center text-xs text-muted-foreground">
