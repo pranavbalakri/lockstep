@@ -231,7 +231,11 @@ export function FileUpload({
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={() => removeFile(file.fileId)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    e.preventDefault()
+                    removeFile(file.fileId)
+                  }}
                   disabled={disabled}
                   className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
                 >

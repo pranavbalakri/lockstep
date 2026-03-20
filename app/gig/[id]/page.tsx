@@ -4,6 +4,7 @@ import { useState, useEffect, use } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Header } from "@/components/header"
+import { File, Image, FileText, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { formatDistanceToNow, format } from "date-fns"
 import { getInitials, getAvatarColor } from "@/lib/avatar"
@@ -44,8 +45,27 @@ interface GigData {
     url?: string
     notes?: string
     filePaths: string
+    files?: {
+      id: string
+      filename: string
+      mimeType: string
+      sizeBytes: number
+      fileType: string
+    }[]
   }
   submissionCount?: number
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`
+}
+
+function getFileIcon(fileType: string) {
+  if (fileType === "image") return Image
+  if (fileType === "document" || fileType === "code") return FileText
+  return File
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -361,10 +381,12 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
               <AIReviewResult data={gig.aiReviewData} />
             )}
 
-            {/* Submission / Review section (client side) */}
-            {isClient && gig.status === "submitted" && gig.submission && (
+            {/* Submission / Review section */}
+            {(isClient || isFreelancer) && (gig.status === "submitted" || gig.status === "completed") && gig.submission && (
               <section className="mb-8 rounded-xl border bg-card p-5">
-                <h2 className="mb-4 font-serif text-lg font-medium text-foreground">Deliverable Submitted</h2>
+                <h2 className="mb-4 font-serif text-lg font-medium text-foreground">
+                  {gig.status === "completed" ? "Delivered Work" : "Deliverable Submitted"}
+                </h2>
                 {gig.submission.textContent && (
                   <div className="mb-4">
                     <h3 className="mb-1 text-sm font-medium text-foreground">Submission</h3>
@@ -380,48 +402,78 @@ export default function GigPage({ params }: { params: Promise<{ id: string }> })
                   </div>
                 )}
                 {gig.submission.notes && (
-                  <div className="mb-6">
+                  <div className="mb-4">
                     <h3 className="mb-1 text-sm font-medium text-foreground">Notes to client</h3>
                     <p className="text-sm text-muted-foreground">{gig.submission.notes}</p>
                   </div>
                 )}
-                {reviewError && (
-                  <p className="mb-4 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{reviewError}</p>
+                {gig.submission.files && gig.submission.files.length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="mb-2 text-sm font-medium text-foreground">Attached Files</h3>
+                    <div className="flex flex-col gap-2">
+                      {gig.submission.files.map((file) => {
+                        const Icon = getFileIcon(file.fileType)
+                        return (
+                          <a
+                            key={file.id}
+                            href={`/api/files/${file.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-3 rounded-lg border bg-background px-3 py-2 transition-colors hover:bg-secondary/50"
+                          >
+                            <Icon className="h-5 w-5 shrink-0 text-muted-foreground" />
+                            <div className="flex-1 min-w-0">
+                              <p className="truncate text-sm font-medium text-foreground">{file.filename}</p>
+                              <p className="text-xs text-muted-foreground">{formatFileSize(file.sizeBytes)}</p>
+                            </div>
+                            <Download className="h-4 w-4 text-muted-foreground" />
+                          </a>
+                        )
+                      })}
+                    </div>
+                  </div>
                 )}
-                {!disputeMode ? (
-                  <div className="flex items-center gap-3">
-                    <Button className="rounded-full px-6" disabled={reviewLoading} onClick={handleAccept}>
-                      {reviewLoading ? "Releasing…" : "Accept & Release Payment"}
-                    </Button>
-                    <Button variant="outline" className="rounded-full px-6 text-destructive hover:text-destructive" onClick={() => setDisputeMode(true)}>
-                      Dispute
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex flex-col gap-3">
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-sm font-medium text-foreground">Your argument</label>
-                      <p className="text-xs text-muted-foreground">Explain why the deliverable does not meet the agreed scope.</p>
-                      <textarea
-                        value={disputeArgument}
-                        onChange={(e) => setDisputeArgument(e.target.value)}
-                        placeholder="Be specific and reference the agreed deliverables…"
-                        rows={4}
-                        className="rounded-lg border bg-background px-3 py-2.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary resize-none"
-                      />
-                    </div>
-                    {disputeError && (
-                      <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{disputeError}</p>
+                {isClient && gig.status === "submitted" && (
+                  <>
+                    {reviewError && (
+                      <p className="mb-4 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{reviewError}</p>
                     )}
-                    <div className="flex items-center gap-3">
-                      <Button variant="outline" className="rounded-full px-6 text-destructive hover:text-destructive" disabled={disputeLoading} onClick={handleDispute}>
-                        {disputeLoading ? "Submitting…" : "Submit Dispute"}
-                      </Button>
-                      <Button variant="ghost" className="rounded-full" onClick={() => { setDisputeMode(false); setDisputeArgument(""); setDisputeError("") }}>
-                        Cancel
-                      </Button>
-                    </div>
-                  </div>
+                    {!disputeMode ? (
+                      <div className="flex items-center gap-3">
+                        <Button className="rounded-full px-6" disabled={reviewLoading} onClick={handleAccept}>
+                          {reviewLoading ? "Releasing…" : "Accept & Release Payment"}
+                        </Button>
+                        <Button variant="outline" className="rounded-full px-6 text-destructive hover:text-destructive" onClick={() => setDisputeMode(true)}>
+                          Dispute
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col gap-3">
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-sm font-medium text-foreground">Your argument</label>
+                          <p className="text-xs text-muted-foreground">Explain why the deliverable does not meet the agreed scope.</p>
+                          <textarea
+                            value={disputeArgument}
+                            onChange={(e) => setDisputeArgument(e.target.value)}
+                            placeholder="Be specific and reference the agreed deliverables…"
+                            rows={4}
+                            className="rounded-lg border bg-background px-3 py-2.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary resize-none"
+                          />
+                        </div>
+                        {disputeError && (
+                          <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{disputeError}</p>
+                        )}
+                        <div className="flex items-center gap-3">
+                          <Button variant="outline" className="rounded-full px-6 text-destructive hover:text-destructive" disabled={disputeLoading} onClick={handleDispute}>
+                            {disputeLoading ? "Submitting…" : "Submit Dispute"}
+                          </Button>
+                          <Button variant="ghost" className="rounded-full" onClick={() => { setDisputeMode(false); setDisputeArgument(""); setDisputeError("") }}>
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </section>
             )}
