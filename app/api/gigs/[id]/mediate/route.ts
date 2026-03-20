@@ -89,6 +89,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "Argument is required" }, { status: 400 })
   }
 
+  // Input validation for security
+  const MAX_ARGUMENT_LENGTH = 5000
+  if (argument.length > MAX_ARGUMENT_LENGTH) {
+    return NextResponse.json(
+      { error: `Argument must be ${MAX_ARGUMENT_LENGTH} characters or less` },
+      { status: 400 }
+    )
+  }
+
   // Store argument for this party
   const update = isClient
     ? { clientArgument: argument }

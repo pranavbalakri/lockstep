@@ -26,6 +26,30 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   const { textContent, url, notes, fileIds } = await req.json()
 
+  // Input validation for security
+  const MAX_TEXT_CONTENT_LENGTH = 50000
+  const MAX_URL_LENGTH = 2000
+  const MAX_NOTES_LENGTH = 5000
+
+  if (textContent && textContent.length > MAX_TEXT_CONTENT_LENGTH) {
+    return NextResponse.json(
+      { error: `Text content must be ${MAX_TEXT_CONTENT_LENGTH} characters or less` },
+      { status: 400 }
+    )
+  }
+  if (url && url.length > MAX_URL_LENGTH) {
+    return NextResponse.json(
+      { error: `URL must be ${MAX_URL_LENGTH} characters or less` },
+      { status: 400 }
+    )
+  }
+  if (notes && notes.length > MAX_NOTES_LENGTH) {
+    return NextResponse.json(
+      { error: `Notes must be ${MAX_NOTES_LENGTH} characters or less` },
+      { status: 400 }
+    )
+  }
+
   interface SubmissionFileData {
     id: string
     filename: string
