@@ -108,7 +108,26 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       },
     })
 
-    return NextResponse.json({ review: review.verdict }, { status: 201 })
+    // Fetch the complete submission with files for the frontend
+    const completeSubmission = await prisma.submission.findUnique({
+      where: { id: submission.id },
+      include: {
+        files: {
+          select: {
+            id: true,
+            filename: true,
+            mimeType: true,
+            sizeBytes: true,
+            fileType: true,
+          },
+        },
+      },
+    })
+
+    return NextResponse.json({
+      review: review.verdict,
+      submission: completeSubmission,
+    }, { status: 201 })
   } catch (err) {
     console.error("AI review failed during submission:", err)
     return NextResponse.json({ error: "AI review failed. Please try submitting again." }, { status: 500 })

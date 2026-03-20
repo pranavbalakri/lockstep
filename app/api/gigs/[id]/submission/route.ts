@@ -7,12 +7,28 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const session = await getSessionFromRequest(req)
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  const submission = await prisma.submission.findFirst({
+  const submissions = await prisma.submission.findMany({
     where: { gigId: id },
     orderBy: { version: "desc" },
-    include: { freelancer: { select: { id: true, name: true } } },
+    include: {
+      freelancer: { select: { id: true, name: true } },
+      files: {
+        select: {
+          id: true,
+          filename: true,
+          mimeType: true,
+          sizeBytes: true,
+          fileType: true,
+        },
+      },
+    },
   })
 
-  if (!submission) return NextResponse.json({ submission: null })
-  return NextResponse.json({ submission })
+  if (submissions.length === 0) return NextResponse.json({ submission: null, submissions: [] })
+
+  // Return both the latest submission (for backward compatibility) and all submissions
+  return NextResponse.json({
+    submission: submissions[0],
+    submissions,
+  })
 }

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { FileUpload, UploadedFile } from "@/components/file-upload"
+import { SubmissionHistory } from "@/components/submission-history"
 
 interface GigData {
   id: string
@@ -25,6 +26,24 @@ interface ReviewResult {
   total: number
   summary: string
   remediation: string | null
+}
+
+interface SubmissionFile {
+  id: string
+  filename: string
+  mimeType: string
+  sizeBytes: number
+  fileType: string
+}
+
+interface PastSubmission {
+  id: string
+  version: number
+  textContent: string | null
+  url: string | null
+  notes: string | null
+  createdAt: string
+  files: SubmissionFile[]
 }
 
 const REVIEW_STEPS = [
@@ -81,6 +100,7 @@ export default function SubmitPage({ params }: { params: Promise<{ id: string }>
   const [submitting, setSubmitting] = useState(false)
   const [reviewStep, setReviewStep] = useState(0)
   const [review, setReview] = useState<ReviewResult | null>(null)
+  const [pastSubmissions, setPastSubmissions] = useState<PastSubmission[]>([])
   const router = useRouter()
 
   useEffect(() => {
@@ -99,11 +119,10 @@ export default function SubmitPage({ params }: { params: Promise<{ id: string }>
         return
       }
       setGig(gigData.gig)
-      if (submissionData?.submission) {
-        setTextContent(submissionData.submission.textContent ?? "")
-        setUrl(submissionData.submission.url ?? "")
-        setNotes(submissionData.submission.notes ?? "")
+      if (submissionData?.submissions) {
+        setPastSubmissions(submissionData.submissions)
       }
+      // Don't pre-fill form with old submission data - user should start fresh
       setLoading(false)
     })
   }, [id, router])
@@ -134,6 +153,14 @@ export default function SubmitPage({ params }: { params: Promise<{ id: string }>
     const data = await res.json()
     if (res.ok) {
       setReview(data.review)
+      // Add the new submission to the top of the history
+      if (data.submission) {
+        setPastSubmissions((prev) => [data.submission, ...prev])
+      }
+      // Update gig submission count
+      setGig((prev) => prev ? { ...prev, submissionCount: (prev.submissionCount ?? 0) + 1 } : null)
+      // Clear the form for next resubmission
+      setUploadedFiles([])
     } else {
       setError(data.error ?? "Submission failed")
     }
@@ -221,7 +248,15 @@ export default function SubmitPage({ params }: { params: Promise<{ id: string }>
               <Link href={`/gig/${id}`}>View gig</Link>
             </Button>
             {!isPassed && (
-              <Button variant="outline" className="rounded-full px-6" onClick={() => setReview(null)}>
+              <Button variant="outline" className="rounded-full px-6" onClick={() => {
+                // Clear all form state for a fresh resubmission
+                setReview(null)
+                setTextContent("")
+                setUrl("")
+                setNotes("")
+                setUploadedFiles([])
+                setError("")
+              }}>
                 Revise & Resubmit
               </Button>
             )}
@@ -234,10 +269,12 @@ export default function SubmitPage({ params }: { params: Promise<{ id: string }>
     )
   }
 
+  const hasPastSubmissions = pastSubmissions.length > 0
+
   return (
     <main className="min-h-screen bg-background">
       <Header />
-      <div className="mx-auto max-w-2xl px-6 py-12">
+      <div className={`mx-auto px-6 py-12 ${hasPastSubmissions ? "max-w-5xl" : "max-w-2xl"}`}>
         <div className="mb-8">
           <h1 className="font-serif text-3xl font-normal text-foreground">
             {gig.submissionCount ? "Resubmit Deliverable" : "Submit Deliverable"}
@@ -245,82 +282,94 @@ export default function SubmitPage({ params }: { params: Promise<{ id: string }>
           <p className="mt-1 text-sm text-muted-foreground">{gig.title}</p>
         </div>
 
-        {gig.submissionCount ? (
-          <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50 p-4">
-            <p className="text-sm text-blue-800">
-              You have submitted {gig.submissionCount} time{gig.submissionCount !== 1 ? "s" : ""} previously.
-              This will be revision <span className="font-semibold">#{gig.submissionCount + 1}</span>.
-              Previous submissions are kept for reference.
-            </p>
+        <div className={`${hasPastSubmissions ? "flex gap-6" : ""}`}>
+          {/* Main form column */}
+          <div className="flex-1 min-w-0">
+            {gig.submissionCount ? (
+              <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50 p-4">
+                <p className="text-sm text-blue-800">
+                  You have submitted {gig.submissionCount} time{gig.submissionCount !== 1 ? "s" : ""} previously.
+                  This will be revision <span className="font-semibold">#{gig.submissionCount + 1}</span>.
+                  Upload new files for this submission.
+                </p>
+              </div>
+            ) : null}
+
+            <div className="mb-6 rounded-xl border bg-secondary/40 p-4">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-1">Expected deliverables</p>
+              <p className="text-sm text-foreground">{gig.deliverables}</p>
+            </div>
+
+            <div className="rounded-xl border bg-card p-6 shadow-sm">
+              <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-medium text-foreground">Written content</label>
+                  <p className="text-xs text-muted-foreground">For writing, content, or documentation deliverables.</p>
+                  <textarea
+                    value={textContent}
+                    onChange={(e) => setTextContent(e.target.value)}
+                    placeholder="Paste your written content here…"
+                    rows={6}
+                    className="rounded-lg border bg-background px-3 py-2.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary resize-none"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-medium text-foreground">URL / Link</label>
+                  <p className="text-xs text-muted-foreground">GitHub repo, live site, Figma file, Google Doc, etc.</p>
+                  <input
+                    type="url"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    placeholder="https://github.com/you/project"
+                    className="h-10 rounded-lg border bg-background px-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-medium text-foreground">Files</label>
+                  <p className="text-xs text-muted-foreground">Upload images, PDFs, code files, or other deliverables.</p>
+                  <FileUpload
+                    gigId={id}
+                    files={uploadedFiles}
+                    onFilesChange={setUploadedFiles}
+                    disabled={submitting}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-medium text-foreground">Notes to client</label>
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Any notes, caveats, or instructions for the client…"
+                    rows={3}
+                    className="rounded-lg border bg-background px-3 py-2.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary resize-none"
+                  />
+                </div>
+
+                {error && (
+                  <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
+                )}
+
+                <div className="flex items-center gap-3 pt-2">
+                  <Button type="submit" size="lg" className="rounded-full px-8">
+                    Submit & Run AI Review
+                  </Button>
+                  <Button asChild variant="ghost" size="lg" className="rounded-full">
+                    <Link href={`/gig/${id}`}>Cancel</Link>
+                  </Button>
+                </div>
+              </form>
+            </div>
           </div>
-        ) : null}
 
-        <div className="mb-6 rounded-xl border bg-secondary/40 p-4">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-1">Expected deliverables</p>
-          <p className="text-sm text-foreground">{gig.deliverables}</p>
-        </div>
-
-        <div className="rounded-xl border bg-card p-6 shadow-sm">
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-foreground">Written content</label>
-              <p className="text-xs text-muted-foreground">For writing, content, or documentation deliverables.</p>
-              <textarea
-                value={textContent}
-                onChange={(e) => setTextContent(e.target.value)}
-                placeholder="Paste your written content here…"
-                rows={6}
-                className="rounded-lg border bg-background px-3 py-2.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary resize-none"
-              />
+          {/* Sidebar with submission history */}
+          {hasPastSubmissions && (
+            <div className="w-72 shrink-0">
+              <SubmissionHistory submissions={pastSubmissions} />
             </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-foreground">URL / Link</label>
-              <p className="text-xs text-muted-foreground">GitHub repo, live site, Figma file, Google Doc, etc.</p>
-              <input
-                type="url"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://github.com/you/project"
-                className="h-10 rounded-lg border bg-background px-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-foreground">Files</label>
-              <p className="text-xs text-muted-foreground">Upload images, PDFs, code files, or other deliverables.</p>
-              <FileUpload
-                gigId={id}
-                files={uploadedFiles}
-                onFilesChange={setUploadedFiles}
-                disabled={submitting}
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-foreground">Notes to client</label>
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Any notes, caveats, or instructions for the client…"
-                rows={3}
-                className="rounded-lg border bg-background px-3 py-2.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary resize-none"
-              />
-            </div>
-
-            {error && (
-              <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
-            )}
-
-            <div className="flex items-center gap-3 pt-2">
-              <Button type="submit" size="lg" className="rounded-full px-8">
-                Submit & Run AI Review
-              </Button>
-              <Button asChild variant="ghost" size="lg" className="rounded-full">
-                <Link href={`/gig/${id}`}>Cancel</Link>
-              </Button>
-            </div>
-          </form>
+          )}
         </div>
       </div>
     </main>
