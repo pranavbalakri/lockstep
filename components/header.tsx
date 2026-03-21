@@ -6,6 +6,7 @@ import { Menu, X, ChevronDown, Smile } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { getInitials, getAvatarColor } from "@/lib/avatar"
+import { usePrivy } from "@privy-io/react-auth"
 
 interface SessionUser {
   id: string
@@ -20,13 +21,15 @@ export function Header() {
   const [user, setUser] = useState<SessionUser | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
+  const { ready, login, logout: privyLogout, authenticated } = usePrivy()
 
+  // Fetch JWT session on mount and whenever auth state changes
   useEffect(() => {
     fetch("/api/auth/me")
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => setUser(d?.user ?? null))
       .catch(() => {})
-  }, [])
+  }, [authenticated])
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -40,10 +43,10 @@ export function Header() {
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" })
+    await privyLogout()
     setUser(null)
     setDropdownOpen(false)
     router.push("/")
-    router.refresh()
   }
 
   return (
@@ -115,8 +118,14 @@ export function Header() {
               )}
             </div>
           ) : (
-            <Button asChild variant="outline" size="sm" className="rounded-full px-5 text-sm font-normal">
-              <Link href="/login">Log in</Link>
+            <Button
+              onClick={() => ready && login()}
+              disabled={!ready}
+              variant="outline"
+              size="sm"
+              className="rounded-full px-5 text-sm font-normal"
+            >
+              Log in
             </Button>
           )}
         </div>
@@ -166,8 +175,14 @@ export function Header() {
                   </button>
                 </div>
               ) : (
-                <Button asChild variant="outline" size="sm" className="w-full rounded-full text-sm font-normal">
-                  <Link href="/login">Log in</Link>
+                <Button
+                  onClick={() => ready && login()}
+                  disabled={!ready}
+                  variant="outline"
+                  size="sm"
+                  className="w-full rounded-full text-sm font-normal"
+                >
+                  Log in
                 </Button>
               )}
             </div>

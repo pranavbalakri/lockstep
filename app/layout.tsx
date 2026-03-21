@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Fraunces, Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
-import { Web3AuthAppProvider } from './web3auth-provider'
+import { PrivyAppProvider } from './privy-provider'
 import './globals.css'
 
 const fraunces = Fraunces({ 
@@ -45,9 +45,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${fraunces.variable} ${inter.variable} font-sans antialiased`}>
-        <Web3AuthAppProvider>
+        <PrivyAppProvider>
           {children}
-        </Web3AuthAppProvider>
+        </PrivyAppProvider>
         <Analytics />
       </body>
     </html>

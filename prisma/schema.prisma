@@ -91,7 +91,8 @@ model User {
   id                String       @id @default(cuid())
   name              String
   email             String       @unique
-  password          String
+  password          String?
+  privyId           String?      @unique
   role              String       @default("freelancer")
   walletAddress     String?
   createdAt         DateTime     @default(now())

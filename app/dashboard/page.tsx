@@ -6,9 +6,7 @@ import { useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { formatDistanceToNow, format } from "date-fns"
-import { useWeb3Auth, useWeb3AuthConnect } from "@web3auth/modal/react"
-import { createWalletClient, custom, type EIP1193Provider } from "viem"
-import { sepolia } from "viem/chains"
+import { useWallets } from "@privy-io/react-auth"
 
 interface SessionUser { id: string; name: string; email: string; role: string; walletAddress?: string | null }
 interface Gig { id: string; title: string; budget: number; status: string; requestCount: number; createdAt: string; deadline: string }
@@ -43,8 +41,8 @@ export default function DashboardPage() {
   const [actionError, setActionError] = useState("")
   const [pendingAcceptId, setPendingAcceptId] = useState<string | null>(null)
   const pendingProcessed = useRef(false)
-  const { provider, isConnected } = useWeb3Auth()
-  const { connect } = useWeb3AuthConnect()
+  const { wallets } = useWallets()
+  const embeddedWallet = wallets.find((w) => w.walletClientType === "privy")
   const router = useRouter()
 
   const loadData = useCallback(async (u: SessionUser) => {
@@ -76,15 +74,14 @@ export default function DashboardPage() {
       })
   }, [router, loadData])
 
-  // When Web3Auth connects (after accept triggers connect()), save the wallet address
-  // and process the pending accept.
+  // When the Privy embedded wallet is ready and there's a pending accept, save the
+  // wallet address then process the accept.
   useEffect(() => {
-    if (!isConnected || !provider || !pendingAcceptId || pendingProcessed.current) return
+    if (!embeddedWallet || !pendingAcceptId || pendingProcessed.current) return
     pendingProcessed.current = true
     ;(async () => {
       try {
-        const wc = createWalletClient({ chain: sepolia, transport: custom(provider as EIP1193Provider) })
-        const [addr] = await wc.getAddresses()
+        const addr = embeddedWallet.address
         if (addr && !user?.walletAddress) {
           const res = await fetch("/api/auth/me", {
             method: "PATCH",
@@ -101,7 +98,7 @@ export default function DashboardPage() {
       }
     })()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isConnected, provider, pendingAcceptId])
+  }, [embeddedWallet, pendingAcceptId])
 
   async function doAccept(requestId: string) {
     const res = await fetch(`/api/requests/${requestId}`, {
@@ -120,9 +117,8 @@ export default function DashboardPage() {
   async function handleRequestAction(requestId: string, action: "accept" | "reject") {
     setActionError("")
     if (action === "accept" && !user?.walletAddress) {
-      // Connect embedded wallet to capture address before accepting
+      // Privy embedded wallet is auto-created on login; save address before accepting
       setPendingAcceptId(requestId)
-      connect()
       return
     }
     if (action === "reject") {
