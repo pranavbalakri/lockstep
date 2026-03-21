@@ -39,8 +39,6 @@ export default function DashboardPage() {
   const [requests, setRequests] = useState<Request[]>([])
   const [loading, setLoading] = useState(true)
   const [actionError, setActionError] = useState("")
-  const [pendingAcceptId, setPendingAcceptId] = useState<string | null>(null)
-  const pendingProcessed = useRef(false)
   const { wallets } = useWallets()
   const embeddedWallet = wallets.find((w) => w.walletClientType === "privy")
   const router = useRouter()
@@ -74,33 +72,16 @@ export default function DashboardPage() {
       })
   }, [router, loadData])
 
-  // When the Privy embedded wallet is ready and there's a pending accept, save the
-  // wallet address then process the accept.
-  useEffect(() => {
-    if (!embeddedWallet || !pendingAcceptId || pendingProcessed.current) return
-    pendingProcessed.current = true
-    ;(async () => {
-      try {
-        const addr = embeddedWallet.address
-        if (addr && !user?.walletAddress) {
-          const res = await fetch("/api/auth/me", {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ walletAddress: addr }),
-          })
-          if (res.ok) setUser((u) => u ? { ...u, walletAddress: addr } : u)
-        }
-        const id = pendingAcceptId
-        setPendingAcceptId(null)
-        await doAccept(id)
-      } finally {
-        pendingProcessed.current = false
-      }
-    })()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [embeddedWallet, pendingAcceptId])
-
   async function doAccept(requestId: string) {
+    // Save embedded wallet address if not yet recorded
+    if (!user?.walletAddress && embeddedWallet?.address) {
+      const patch = await fetch("/api/auth/me", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ walletAddress: embeddedWallet.address }),
+      })
+      if (patch.ok) setUser((u) => u ? { ...u, walletAddress: embeddedWallet.address } : u)
+    }
     const res = await fetch(`/api/requests/${requestId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -116,11 +97,6 @@ export default function DashboardPage() {
 
   async function handleRequestAction(requestId: string, action: "accept" | "reject") {
     setActionError("")
-    if (action === "accept" && !user?.walletAddress) {
-      // Privy embedded wallet is auto-created on login; save address before accepting
-      setPendingAcceptId(requestId)
-      return
-    }
     if (action === "reject") {
       const res = await fetch(`/api/requests/${requestId}`, {
         method: "PATCH",
